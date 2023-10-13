@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import math
 import numpy as np
 import pandas as pd
+from collections import defaultdict
+
 
 
 
@@ -98,12 +100,17 @@ class CategoricalDecisionTree(DecisionTree):
             if splitting_attr is None:
                 return Leaf(DecisionTree.plurality(y))
             else:
-                children = dict()
+                p = DecisionTree.plurality(y)
+                children = defaultdict(lambda : p)
                 splitting_domain = np.unique(X[splitting_attr])
-                for value in splitting_domain:
-                    Dv = X[X[splitting_attr] == value]
-                    
-
+                for v in splitting_domain:
+                    Xv = X[X[splitting_attr] == v]
+                    yv = y[X[splitting_attr] == v]
+                    if Xv.shape[0] != 0:
+                        Av = [a for a in A if a != splitting_attr] #better way?
+                        Tv = CategoricalDecisionTree.C45(Xv, yv, Av, threshold, ratio)
+                        children[v] = Tv
+                return CategoricalNode(children, splitting_attr)
 
     def build(self, X, y, threshold = 0.001):
         self.root = CategoricalDecisionTree.C45(X, y, X.columns, threshold)

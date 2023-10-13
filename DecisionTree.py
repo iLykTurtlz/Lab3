@@ -38,9 +38,9 @@ class DecisionTree(ABC):
         if len(probabilities) == 1:
             return 0
         zero = probabilities.sum() - 1
-        if zero > 0.0001 or zero < -0.0001:                     #replace magic numbers
+        if zero > 0.0001 or zero < -0.0001:
             raise Exception("Not a probability distribution.")
-        return - sum([p * math.log2(p) for p in probabilities])
+        return - np.sum([p * math.log2(p) for p in probabilities])
 
     def entropy_split(X, y, a):
         """
@@ -48,14 +48,9 @@ class DecisionTree(ABC):
         If a is real-valued or integral with more than 5 distinct values, 
         this function will find the best splitting threshold to create two child nodes.
         """
-        assert(X.shape[0] == y.shape[0])
-        n = X.shape[0]
-        domain_a, counts = np.unique(X[a], return_counts=True)
-        result = 0
-        for value, count in zip(domain_a, counts):
-            probability = count / n
-            result += probability * DecisionTree.entropy(y[X[a] == value])
-        return result
+        
+
+        
 
     def plurality(y):
         labels, counts = np.unique(y, return_counts=True)

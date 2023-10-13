@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 class Classifier(ABC):
     """
     This is the abstract base class for classifiers.

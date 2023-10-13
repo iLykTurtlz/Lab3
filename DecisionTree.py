@@ -10,7 +10,11 @@ class Leaf:
         self.label = label
 
 class CategoricalNode:
-    pass
+    def __init__(self, children=None, splitting_attr=None):
+        self.children = children
+        self.splitting_attr = splitting_attr
+    
+
 
 
 class DecisionTree(ABC):
@@ -47,6 +51,7 @@ class DecisionTree(ABC):
         Returns the entropy after a (hypothetical) split on the attribute a
         If a is real-valued or integral with more than 5 distinct values, 
         this function will find the best splitting threshold to create two child nodes.
+        
         """
         
 
@@ -67,18 +72,19 @@ class CategoricalDecisionTree(DecisionTree):
     def __init__(self):
         super().__init__()
 
-    def select_splitting_attribute(X, y, A, threshold):
+    def select_splitting_attribute(X, y, A, threshold, ratio=False):
         p_0 = DecisionTree.entropy(y)
-        max_gain_ratio = -1 #information gain cannot be negative
+        max_gain = -1 #information gain cannot be negative
         best = None
         for a in A:
             p_a = DecisionTree.entropy_split(X, y, a)
             gain_a = p_0 - p_a
-            gain_ratio_a = gain_a / DecisionTree.entropy(X[a])
-            if gain_ratio_a > max_gain_ratio:
-                max_gain_ratio = gain_ratio_a
+            if ratio:
+                gain_a = gain_a / DecisionTree.entropy(X[a])
+            if gain_a > max_gain:
+                max_gain = gain_a
                 best = a 
-        if max_gain_ratio > threshold:
+        if max_gain > threshold:
             return best
         else:
             return None
@@ -89,7 +95,7 @@ class CategoricalDecisionTree(DecisionTree):
         elif len(A) == 0:
             return Leaf(DecisionTree.plurality(y))
         else:
-            pass
+            
 
     def build(self, X, y, threshold = 0.001):
         self.root = CategoricalDecisionTree.C45(X, y, X.columns, threshold)

@@ -65,12 +65,6 @@ class DecisionTree(ABC):
     def plurality(y):
         labels, counts = np.unique(y, return_counts=True)
         return labels[np.argmax(counts)]
-    
-    def information_gain(X, y, a):
-        pass
-
-    def information_gain_ratio(X, y, a):
-        pass
 
 
 class CategoricalDecisionTree(DecisionTree):
@@ -94,13 +88,22 @@ class CategoricalDecisionTree(DecisionTree):
         else:
             return None
 
-    def C45(X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold):
+    def C45(X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold, ratio=False):
         if y.unique().shape[0] == 1:
             return Leaf(y.iloc[0])
         elif len(A) == 0:
             return Leaf(DecisionTree.plurality(y))
         else:
-            
+            splitting_attr = CategoricalDecisionTree.select_splitting_attribute(X, y, A, threshold, ratio)
+            if splitting_attr is None:
+                return Leaf(DecisionTree.plurality(y))
+            else:
+                children = dict()
+                splitting_domain = np.unique(X[splitting_attr])
+                for value in splitting_domain:
+                    Dv = X[X[splitting_attr] == value]
+                    
+
 
     def build(self, X, y, threshold = 0.001):
         self.root = CategoricalDecisionTree.C45(X, y, X.columns, threshold)

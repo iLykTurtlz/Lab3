@@ -47,6 +47,7 @@ class DecisionTree(ABC):
         Returns the entropy after a (hypothetical) split on the attribute a
         If a is real-valued or integral with more than 5 distinct values, 
         this function will find the best splitting threshold to create two child nodes.
+        
         """
         assert(X.shape[0] == y.shape[0])
         n = X.shape[0]

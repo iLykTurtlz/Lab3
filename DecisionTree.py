@@ -45,8 +45,10 @@ class DecisionTree(ABC):
     def entropy_split(X, y, a):
         """
         Returns the entropy after a (hypothetical) split on the attribute a
+        If a is real-valued or integral with more than 5 distinct values, 
+        this function will find the best splitting threshold to create two child nodes.
         """
-        pass
+        
 
     def plurality(y):
         labels, counts = np.unique(y, return_counts=True)
@@ -64,9 +66,20 @@ class CategoricalDecisionTree(DecisionTree):
         super().__init__()
 
     def select_splitting_attribute(X, y, A, threshold):
-        p0 = DecisionTree.entropy(y)
+        p_0 = DecisionTree.entropy(y)
+        max_gain_ratio = -1 #information gain cannot be negative
+        best = None
         for a in A:
-            pass
+            p_a = DecisionTree.entropy_split(X, y, a)
+            gain_a = p_0 - p_a
+            gain_ratio_a = gain_a / DecisionTree.entropy(X[a])
+            if gain_ratio_a > max_gain_ratio:
+                max_gain_ratio = gain_ratio_a
+                best = a 
+        if max_gain_ratio > threshold:
+            return best
+        else:
+            return None
 
     def C45(X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold):
         if y.unique().shape[0] == 1:

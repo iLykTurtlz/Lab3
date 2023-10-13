@@ -22,9 +22,9 @@ class DecisionTreeClassifier(Classifier):
     We may eventually have different types of decision trees.
     If the predict method is called before the fit method, or if asked to fit incompatible data, an error is raised.
     """
-    def __init__(self, input_dimension, min_info_gain):
+    def __init__(self, input_dimension, threshold):
         super().__init__(input_dimension)
-        self.min_info_gain = min_info_gain
+        self.threshold = threshold
         self.tree = None
 
 
@@ -43,10 +43,10 @@ class KNNClassifier(Classifier):
         self.independent_variables = None
         self.dependent_variables = None
     
-    def fit(self, independent_variables, dependent_variables):
-        if len(independent_variables) != len(dependent_variables):
+    def fit(self, X, y):
+        if len(X) != len(y):
             raise Exception("The independent and dependent variable lists must be compatible.")
-        self.independent_variables = independent_variables
-        self.dependent_variables = dependent_variables
+        self.X = X
+        self.y = y
     
 

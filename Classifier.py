@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from DecisionTree import CategoricalDecisionTree
 
 class Classifier(ABC):
     """
@@ -8,11 +9,11 @@ class Classifier(ABC):
         self.input_dimension = input_dimension
     
     @abstractmethod
-    def fit(self, independent_variables, dependent_variables):
+    def fit(self, X, y):
         raise NotImplementedError("This method has not been implemented.")
     
     @abstractmethod
-    def predict(self, X):
+    def predict(self, x):
         raise NotImplementedError("This method has not been implemented.")
     
 
@@ -22,11 +23,14 @@ class DecisionTreeClassifier(Classifier):
     We may eventually have different types of decision trees.
     If the predict method is called before the fit method, or if asked to fit incompatible data, an error is raised.
     """
-    def __init__(self, input_dimension, threshold):
+    def __init__(self, input_dimension, threshold, type='categorical', ratio=False):
         super().__init__(input_dimension)
         self.threshold = threshold
         self.tree = None
 
+    def fit(self, X, y, threshold=0.01):
+        if type == 'categorical':
+            self.tree = CategoricalDecisionTree().build(X, y, threshold)
 
     
 

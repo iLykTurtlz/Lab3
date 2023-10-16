@@ -18,7 +18,7 @@ class CategoricalNode:
     of children.  The corresponding values are child subtrees following the edges labeled
     with the keys.
     """
-    def __init__(self, children=None, splitting_attr=None):
+    def __init__(self, children, splitting_attr):
         self.children = children
         self.splitting_attr = splitting_attr
 
@@ -134,7 +134,7 @@ class CategoricalDecisionTree(DecisionTree):
                 for v in splitting_domain:
                     Xv = X[X[splitting_attr] == v]
                     yv = y[X[splitting_attr] == v]
-                    if Xv.shape[0] != 0:
+                    if Xv.shape[0] != 0:  #this test is probably useless
                         Av = [a for a in A if a != splitting_attr] 
                         Tv = CategoricalDecisionTree.C45(Xv, yv, Av, threshold, ratio)
                         children[v] = Tv
@@ -143,7 +143,7 @@ class CategoricalDecisionTree(DecisionTree):
     def fit(self, X, y, threshold):
         self.root = CategoricalDecisionTree.C45(X, y, X.columns, threshold)
 
-    def predict(self, x):
+    def predict(self, X):
         def tree_search(x, current):
             if isinstance(current, Leaf):
                 return current.label
@@ -151,7 +151,7 @@ class CategoricalDecisionTree(DecisionTree):
                 return tree_search(x, current.children[x[current.splitting_attr]])
             else:
                 raise Exception("Tree error: a node that is neither CategoricalNode nor Leaf.")
-        return tree_search(x, self.root)
+        return [tree_search(x, self.root) for x in X]
         
 
 

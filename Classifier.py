@@ -23,13 +23,14 @@ class DecisionTreeClassifier(Classifier):
     We may eventually have different types of decision trees.
     If the predict method is called before the fit method, or if asked to fit incompatible data, an error is raised.
     """
-    def __init__(self, input_dimension, threshold, type='categorical', ratio=False):
+    def __init__(self, input_dimension, threshold, kind='categorical', ratio=False):
         super().__init__(input_dimension)
         self.threshold = threshold
+        self.kind = kind
         self.tree = None
 
     def fit(self, X, y, threshold=0.01):
-        if type == 'categorical':
+        if self.kind == 'categorical':
             self.tree = CategoricalDecisionTree().build(X, y, threshold)
 
     

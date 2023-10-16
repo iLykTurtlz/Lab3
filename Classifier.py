@@ -17,6 +17,11 @@ class Classifier(ABC):
     def predict(self, x):
         raise NotImplementedError("This method has not been implemented.")
     
+    @abstractmethod
+    def read_json(self, filename):
+        raise NotImplementedError("This method has not been implemented.")
+    
+    
 
 class DecisionTreeClassifier(Classifier):
     """
@@ -62,6 +67,7 @@ def main():
         quit()
     
     
+
     
 
 

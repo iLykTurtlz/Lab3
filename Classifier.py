@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from InduceC45 import CategoricalDecisionTree
+import sys
 
 class Classifier(ABC):
     """
@@ -53,6 +54,18 @@ class KNNClassifier(Classifier):
             raise Exception("The independent and dependent variable lists must be compatible.")
         self.X = X
         self.y = y
+
+
+def main():
+    if sys.argc != 2:
+        print("Usage: python classifier.py <csv file>")
+        quit()
     
+    
+    
+
+
+if __name__ == "__main__":
+    main()
 
 

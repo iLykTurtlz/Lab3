@@ -6,12 +6,19 @@ from collections import defaultdict
 
 
 
-
 class Leaf:
     """Contains the classification label at the end of a tree branch.
+    p is the probability of the plurality class
     """
-    def __init__(self, label):
+    def __init__(self, label, p):
         self.label = label
+        self.p = p
+
+    def to_dict(self):
+        return {"decision": str(self.label), "p" : self.p}
+    
+    def get_type(self):
+        return "leaf"
 
 class CategoricalNode:
     """Splits on known values of the splitting attribute, which are the keys in the dictionary
@@ -21,6 +28,13 @@ class CategoricalNode:
     def __init__(self, children, splitting_attr):
         self.children = children
         self.splitting_attr = splitting_attr
+
+    def to_dict(self):
+        edges = [{"edge": {"value": k, v.get_type(): v.to_dict()}} for k,v in self.children.items()]
+        return {"value": str(self.splitting_attr), "edges": edges}
+    
+    def get_type(self):
+        return "node"
 
 class NumericalNode:
     """Splits on an attribute at a certain splitting value.  If a data point has a value
@@ -94,7 +108,7 @@ class DecisionTree(ABC):
 
     def plurality(y):
         labels, counts = np.unique(y, return_counts=True)
-        return labels[np.argmax(counts)]
+        return labels[np.argmax(counts)], max(counts) / y.shape[0]
 
 
 class CategoricalDecisionTree(DecisionTree):
@@ -120,16 +134,18 @@ class CategoricalDecisionTree(DecisionTree):
 
     def C45(X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold, ratio=False):
         if y.unique().shape[0] == 1:
-            return Leaf(y.iloc[0])
+            return Leaf(y.iloc[0], 1.0)
         elif len(A) == 0:
-            return Leaf(DecisionTree.plurality(y))
+            label, p = DecisionTree.plurality(y)
+            return Leaf(label, p)
         else:
             splitting_attr = CategoricalDecisionTree.select_splitting_attribute(X, y, A, threshold, ratio)
             if splitting_attr is None:
-                return Leaf(DecisionTree.plurality(y))
+                label, p = DecisionTree.plurality(y)
+                return Leaf(label, p)
             else:
-                p = DecisionTree.plurality(y)
-                children = defaultdict(lambda : Leaf(p))
+                label, p = DecisionTree.plurality(y)
+                children = defaultdict(lambda : Leaf(label, p))
                 splitting_domain = np.unique(X[splitting_attr])
                 for v in splitting_domain:
                     Xv = X[X[splitting_attr] == v]
@@ -146,12 +162,16 @@ class CategoricalDecisionTree(DecisionTree):
     def predict(self, X):
         def tree_search(x, current):
             if isinstance(current, Leaf):
-                return current.label
+                return current.label, current.p
             elif isinstance(current, CategoricalNode):
                 return tree_search(x, current.children[x[current.splitting_attr]])
             else:
                 raise Exception("Tree error: a node that is neither CategoricalNode nor Leaf.")
-        return [tree_search(x, self.root) for x in X]
+        result = [tree_search(x, self.root) for x in X]
+        return [x for x,_ in result], [y for _,y in result]
+    
+    def to_dict(self):
+        return self.root.to_dict()
         
 
 

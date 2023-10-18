@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-
+class TreeReadError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 class Leaf:
     """Contains the classification label at the end of a tree branch.
@@ -31,7 +33,8 @@ class CategoricalNode:
 
     def to_dict(self):
         edges = [{"edge": {"value": k, v.get_type(): v.to_dict()}} for k,v in self.children.items()]
-        return {"value": str(self.splitting_attr), "edges": edges}
+        edges.append({"edge" : {"value": "default", "leaf": self.children.default_factory().to_dict()}})
+        return {"var": str(self.splitting_attr), "edges": edges}
     
     def get_type(self):
         return "node"
@@ -64,13 +67,6 @@ class DecisionTree(ABC):
         Constructs a tree and assigns the root to self.root
         """
         raise NotImplementedError("This method has not been implemented.")
-    
-    @abstractmethod
-    def save(self, filename):
-        """
-        Writes a JSON file with the given name.
-        """
-        raise NotImplementedError("This method has not been implemented")
     
     @abstractmethod
     def predict(self, x):
@@ -115,7 +111,7 @@ class CategoricalDecisionTree(DecisionTree):
     def __init__(self):
         super().__init__()
 
-    def select_splitting_attribute(X, y, A, threshold, ratio=False):
+    def select_splitting_attribute(X, y, A, threshold, ratio):
         p_0 = DecisionTree.entropy(y)
         max_gain = -1 #information gain cannot be negative
         best = None
@@ -132,7 +128,7 @@ class CategoricalDecisionTree(DecisionTree):
         else:
             return None
 
-    def C45(X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold, ratio=False):
+    def C45(X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold, ratio):
         if y.unique().shape[0] == 1:
             return Leaf(y.iloc[0], 1.0)
         elif len(A) == 0:
@@ -156,8 +152,8 @@ class CategoricalDecisionTree(DecisionTree):
                         children[v] = Tv
                 return CategoricalNode(children, splitting_attr)
 
-    def fit(self, X, y, threshold):
-        self.root = CategoricalDecisionTree.C45(X, y, X.columns, threshold)
+    def fit(self, X, y, threshold, ratio=False):
+        self.root = CategoricalDecisionTree.C45(X, y, X.columns, threshold, ratio)
 
     def predict(self, X):
         def tree_search(x, current):
@@ -167,11 +163,37 @@ class CategoricalDecisionTree(DecisionTree):
                 return tree_search(x, current.children[x[current.splitting_attr]])
             else:
                 raise Exception("Tree error: a node that is neither CategoricalNode nor Leaf.")
-        result = [tree_search(x, self.root) for x in X]
-        return [x for x,_ in result], [y for _,y in result]
-    
+        #result = [tree_search(X.iloc[i], self.root) for i in range(X.shape[0])] #this result is a list of tuples
+        result = [],[]  #this result is a tuple of lists: labels, confidences
+        for i in range(X.shape[0]):
+            label, confidence = tree_search(X.iloc[i], self.root)
+            result[0].append(label)
+            result[1].append(confidence)
+        return result
+
     def to_dict(self):
         return self.root.to_dict()
+    
+    def from_dict(self, tree_dict):
+        def build(tree_dict):
+            if "decision" in tree_dict:
+                return Leaf(tree_dict['decision'], tree_dict['p'])
+            elif "var" in tree_dict:
+                attr = tree_dict["var"]
+                #edges = [(d['edge']['value'], build(d['edge']['node'])) for d in tree_dict['edges'][:-1]]
+                edges = []
+                for d in tree_dict['edges'][:-1]: #the last edge is the default edge, which should become a function returning a Leaf
+                    if 'node' in d['edge']:
+                        edges.append((d['edge']['value'], build(d['edge']['node'])))
+                    elif 'leaf' in d['edge']:
+                        edges.append((d['edge']['value'], build(d['edge']['leaf'])))
+                    else:
+                        raise TreeReadError("Found an edge that does not lead to an internal node or leaf.")
+                children = defaultdict(lambda : build(tree_dict['edges'][-1]['edge']['leaf']), edges)
+                return CategoricalNode(children, attr)
+            else:
+                raise TreeReadError("Found an improperly formatted internal node or leaf.")
+        self.root = build(tree_dict)
         
 
 

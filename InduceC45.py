@@ -228,6 +228,7 @@ def main():
     y=None
     try:
         class_col = data.iloc[1,0]
+        data = data.drop(index=[0,1])
         X = data.loc[:,data.columns != class_col]
         y = data[class_col]
     except:
@@ -238,7 +239,7 @@ def main():
         X = X.drop(columns=drop_cols)
 
     tree = CategoricalDecisionTree()
-    tree.fit(X, y, 0.001, ratio=True)
+    tree.fit(X, y, threshold=0.01, ratio=True)
 
     json_out = {
         "dataset" : training,

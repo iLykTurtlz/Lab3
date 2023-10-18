@@ -208,6 +208,8 @@ def main():
     except:
         print(f"Error: Could not read train file: {training}")
         
+
+    
     if restrictions:
         try:
             with open(restrictions, 'r') as f:
@@ -217,10 +219,25 @@ def main():
             if len(restrictions) != len(data.columns) - 1:
                 print(f"Error: {sys.argv[2]} does not have the correct ammount of columns.")
                 sys.exit()
-                
-            
-            
         except:
+            print("Restrictions file unreadable")
+            sys.exit()
+    
+    X=None
+    y=None
+    try:
+        class_col = data.iloc[1,0]
+        X = data.loc[:,data.columns != class_col]
+        y = data[class_col]
+    except:
+        print("Could not determine and/or separate category variable.")
+
+    if restrictions:
+        drop_cols = [col for col, drop in zip(X, restrictions) if not drop]
+        X = X.drop(columns=drop_cols)
+
+    
+
         
     
 

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import sys
 from collections import defaultdict
+import json
 
 class TreeReadError(Exception):
     def __init__(self, message):
@@ -236,7 +237,14 @@ def main():
         drop_cols = [col for col, drop in zip(X, restrictions) if not drop]
         X = X.drop(columns=drop_cols)
 
-    
+    tree = CategoricalDecisionTree()
+    tree.fit(X, y, 0.001, ratio=True)
+
+    json_out = {
+        "dataset" : training,
+        "node": tree.to_dict
+    }
+    print(json.dumps(json_out, indent=2))
 
         
     

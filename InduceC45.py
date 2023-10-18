@@ -92,7 +92,14 @@ class DecisionTree(ABC):
         this function will find the best splitting threshold to create two child nodes.
         
         """
-        
+        assert(X.shape[0] == y.shape[0])
+        n = X.shape[0]
+        domain_a, counts = np.unique(X[a], return_counts=True)
+        result = 0
+        for value, count in zip(domain_a, counts):
+            probability = count / n
+            result += probability * DecisionTree.entropy(y[X[a] == value])
+        return result
 
         
 
@@ -243,12 +250,10 @@ def main():
 
     json_out = {
         "dataset" : training,
-        "node": tree.to_dict
+        "node": tree.to_dict()
     }
     print(json.dumps(json_out, indent=2))
 
-        
-    
 
 if __name__ == "__main__":
     main()

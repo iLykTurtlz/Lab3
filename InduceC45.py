@@ -164,12 +164,16 @@ class CategoricalDecisionTree(DecisionTree):
             else:
                 raise Exception("Tree error: a node that is neither CategoricalNode nor Leaf.")
         #result = [tree_search(X.iloc[i], self.root) for i in range(X.shape[0])] #this result is a list of tuples
-        result = [],[]  #this result is a tuple of lists: labels, confidences
-        for i in range(X.shape[0]):
-            label, confidence = tree_search(X.iloc[i], self.root)
-            result[0].append(label)
-            result[1].append(confidence)
-        return result
+        
+        # result = [],[]  #this result is a tuple of lists: labels, confidences
+        # for i in range(X.shape[0]):
+        #     label, confidence = tree_search(X.iloc[i], self.root)
+        #     result[0].append(label)
+        #     result[1].append(confidence)
+
+        #is this faster?
+        result = [tree_search(row, self.root) for _,row in X.iterrows()]
+        return [x for x,_ in result],[y for _,y in result]
 
     def to_dict(self):
         return self.root.to_dict()

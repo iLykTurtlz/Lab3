@@ -194,7 +194,35 @@ class CategoricalDecisionTree(DecisionTree):
         
 
 def main():
-    print("main")
+    argc = len(sys.argv)
+        
+    if argc < 2:
+        print("python3 InduceC45 <TrainingSetFile.csv> [<restrictionsFile>]")
+        sys.exit()
+        
+    training = sys.argv[1]
+    restrictions = sys.argv[2] if argc > 2 else None
+    
+    try:
+        data = pd.read_csv(training)
+    except:
+        print(f"Error: Could not read train file: {training}")
+        
+    if restrictions:
+        try:
+            with open(restrictions, 'r') as f:
+                restrictions =  f.read().strip().split()
+                restrictions = [int(i) for i in restrictions]
+                
+            if len(restrictions) != len(data.columns) - 1:
+                print(f"Error: {sys.argv[2]} does not have the correct ammount of columns.")
+                sys.exit()
+                
+            
+            
+        except:
+        
+    
 
 if __name__ == "__main__":
     main()

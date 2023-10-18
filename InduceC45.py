@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import math
 import numpy as np
 import pandas as pd
+import sys
 from collections import defaultdict
 
 class TreeReadError(Exception):
@@ -52,9 +53,6 @@ class NumericalNode:
         self.splitting_value = splitting_value
 
     
-
-
-
 class DecisionTree(ABC):
     """The abstract base class of a decision tree.
     """
@@ -195,8 +193,8 @@ class CategoricalDecisionTree(DecisionTree):
         self.root = build(tree_dict)
         
 
+def main():
+    print("main")
 
-
-
-
-
+if __name__ == "__main__":
+    main()

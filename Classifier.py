@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from InduceC45 import CategoricalDecisionTree
 import sys
+import pandas as pd
+import json
 
 class Classifier(ABC):
     """
@@ -62,9 +64,25 @@ class KNNClassifier(Classifier):
 
 
 def main():
-    if sys.argc != 2:
-        print("Usage: python classifier.py <csv file>")
-        quit()
+    argc = len(sys.argv)
+    if  argc < 3:
+        print("Usage: python classifier.py <csv file> <json file>")
+        sys.exit()
+        
+    test_file = sys.argv[1]
+    json_file = sys.argv[2]
+    
+    try:
+        test_data = pd.read_csv(test_file)
+        tree = CategoricalDecisionTree()
+        with open(json_file, 'r') as f:
+            tree.from_dict(json.load(f))
+        
+        
+            
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
     
     
 

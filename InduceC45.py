@@ -252,7 +252,9 @@ def main():
         "dataset" : training,
         "node": tree.to_dict()
     }
-    print(json.dumps(json_out, indent=2))
+    #print(json.dumps(json_out, indent=2))
+    with open("test2.json", "w") as write_file:
+        json.dump(json_out, write_file) # encode dict into JSON
 
 
 if __name__ == "__main__":

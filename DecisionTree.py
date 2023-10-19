@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import math
 import numpy as np
 import pandas as pd
-import sys
 from collections import defaultdict
 import json
 
@@ -170,6 +169,7 @@ class CategoricalDecisionTree(DecisionTree):
             elif isinstance(current, CategoricalNode):
                 return tree_search(x, current.children[x[current.splitting_attr]])
             else:
+                print("Type of node=",type(current))
                 raise Exception("Tree error: a node that is neither CategoricalNode nor Leaf.")
         #result = [tree_search(X.iloc[i], self.root) for i in range(X.shape[0])] #this result is a list of tuples
         
@@ -217,6 +217,13 @@ class CategoricalDecisionTree(DecisionTree):
                 json.dump(json_out, wf, indent = 2)
         if return_str:
             return str(json_out)
+        
+    def from_json(self, file):
+        dico = None
+        with open(file, "r", encoding="utf-8") as f:
+            dico = json.load(f)
+        self.from_dict(dico['node'])
+
 
         
 

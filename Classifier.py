@@ -41,6 +41,10 @@ class DecisionTreeClassifier(Classifier):
         if return_str:
             return representation
         
+    def from_json(self, file: str):
+        self.tree = CategoricalDecisionTree()
+        self.tree.from_json(file)
+        
     
 
 class KNNClassifier(Classifier):

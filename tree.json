@@ -1,86 +1,32 @@
 {
-  "dataset": ".\\data\\Mushroom\\agaricus-lepiota.csv",
+  "dataset": "./data/Nursery/nursery.csv",
   "node": {
-    "var": "odor",
+    "var": "health",
     "edges": [
       {
         "edge": {
-          "value": "a",
+          "value": "not_recom",
           "leaf": {
-            "decision": "e",
+            "decision": "not_recom",
             "p": 1.0
           }
         }
       },
       {
         "edge": {
-          "value": "c",
+          "value": "priority",
           "leaf": {
-            "decision": "p",
-            "p": 1.0
+            "decision": "spec_prior",
+            "p": 0.5708333333333333
           }
         }
       },
       {
         "edge": {
-          "value": "f",
+          "value": "recommended",
           "leaf": {
-            "decision": "p",
-            "p": 1.0
-          }
-        }
-      },
-      {
-        "edge": {
-          "value": "l",
-          "leaf": {
-            "decision": "e",
-            "p": 1.0
-          }
-        }
-      },
-      {
-        "edge": {
-          "value": "m",
-          "leaf": {
-            "decision": "p",
-            "p": 1.0
-          }
-        }
-      },
-      {
-        "edge": {
-          "value": "n",
-          "leaf": {
-            "decision": "e",
-            "p": 0.9659863945578231
-          }
-        }
-      },
-      {
-        "edge": {
-          "value": "p",
-          "leaf": {
-            "decision": "p",
-            "p": 1.0
-          }
-        }
-      },
-      {
-        "edge": {
-          "value": "s",
-          "leaf": {
-            "decision": "p",
-            "p": 1.0
-          }
-        }
-      },
-      {
-        "edge": {
-          "value": "y",
-          "leaf": {
-            "decision": "p",
-            "p": 1.0
+            "decision": "priority",
+            "p": 0.5583333333333333
           }
         }
       },
@@ -88,8 +34,8 @@
         "edge": {
           "value": "default",
           "leaf": {
-            "decision": "e",
-            "p": 0.517971442639094
+            "decision": "not_recom",
+            "p": 0.3333333333333333
           }
         }
       }

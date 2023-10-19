@@ -1,0 +1,98 @@
+{
+  "dataset": ".\\data\\Mushroom\\agaricus-lepiota.csv",
+  "node": {
+    "var": "odor",
+    "edges": [
+      {
+        "edge": {
+          "value": "a",
+          "leaf": {
+            "decision": "e",
+            "p": 1.0
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "c",
+          "leaf": {
+            "decision": "p",
+            "p": 1.0
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "f",
+          "leaf": {
+            "decision": "p",
+            "p": 1.0
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "l",
+          "leaf": {
+            "decision": "e",
+            "p": 1.0
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "m",
+          "leaf": {
+            "decision": "p",
+            "p": 1.0
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "n",
+          "leaf": {
+            "decision": "e",
+            "p": 0.9659863945578231
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "p",
+          "leaf": {
+            "decision": "p",
+            "p": 1.0
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "s",
+          "leaf": {
+            "decision": "p",
+            "p": 1.0
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "y",
+          "leaf": {
+            "decision": "p",
+            "p": 1.0
+          }
+        }
+      },
+      {
+        "edge": {
+          "value": "default",
+          "leaf": {
+            "decision": "e",
+            "p": 0.517971442639094
+          }
+        }
+      }
+    ]
+  }
+}

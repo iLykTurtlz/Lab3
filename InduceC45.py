@@ -246,7 +246,7 @@ def main():
         X = X.drop(columns=drop_cols)
 
     tree = CategoricalDecisionTree()
-    tree.fit(X, y, threshold=0.01, ratio=True)
+    tree.fit(X, y, threshold=0.2, ratio=True)
 
     json_out = {
         "dataset" : training,

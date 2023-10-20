@@ -46,6 +46,9 @@ def main():
     print(f"Accuracy: {accuracy:.2f}")
     print(f"Error rate: {(1 - accuracy):.2f}")
     
+    confusion_mat = c.calculate_confusion_matrix(y, predictions[0])
+    c.plot_confusion_matrix(confusion_mat, y.unique())
+    
 
 if __name__=="__main__":
     main()

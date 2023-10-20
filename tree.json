@@ -1,32 +1,51 @@
 {
-  "dataset": "./data/Nursery/nursery.csv",
+  "dataset": ".\\data\\Balloons\\adult+stretch.csv",
   "node": {
-    "var": "health",
+    "var": "Act",
     "edges": [
       {
         "edge": {
-          "value": "not_recom",
+          "value": "DIP",
           "leaf": {
-            "decision": "not_recom",
+            "decision": "F",
             "p": 1.0
           }
         }
       },
       {
         "edge": {
-          "value": "priority",
-          "leaf": {
-            "decision": "spec_prior",
-            "p": 0.5708333333333333
-          }
-        }
-      },
-      {
-        "edge": {
-          "value": "recommended",
-          "leaf": {
-            "decision": "priority",
-            "p": 0.5583333333333333
+          "value": "STRETCH",
+          "node": {
+            "var": "Age",
+            "edges": [
+              {
+                "edge": {
+                  "value": "ADULT",
+                  "leaf": {
+                    "decision": "T",
+                    "p": 1.0
+                  }
+                }
+              },
+              {
+                "edge": {
+                  "value": "CHILD",
+                  "leaf": {
+                    "decision": "F",
+                    "p": 1.0
+                  }
+                }
+              },
+              {
+                "edge": {
+                  "value": "default",
+                  "leaf": {
+                    "decision": "T",
+                    "p": 0.6666666666666666
+                  }
+                }
+              }
+            ]
           }
         }
       },
@@ -34,8 +53,8 @@
         "edge": {
           "value": "default",
           "leaf": {
-            "decision": "not_recom",
-            "p": 0.3333333333333333
+            "decision": "F",
+            "p": 0.6
           }
         }
       }

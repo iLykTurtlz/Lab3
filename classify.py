@@ -32,14 +32,20 @@ def main():
 
     predictions = c.predict(X)
     #print(predictions)
-
     
 
     correct = 0
     for y_true, y_pred in zip(y,predictions[0]):
         if y_true == y_pred:
             correct += 1
-    print("Accuracy:", correct/len(y))
+    # Print detailed report
+    accuracy = len(y)/correct
+    print(f"Total records classified: {len(y)}")
+    print(f"Correctly classified: {correct}")
+    print(f"Incorrectly classified: {len(y) - correct}")
+    print(f"Accuracy: {accuracy:.2f}")
+    print(f"Error rate: {(1 - accuracy):.2f}")
+    
 
 if __name__=="__main__":
     main()

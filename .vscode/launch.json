@@ -8,7 +8,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["./data/Balloons/yellow-small.csv"],
+            "args": ["./data/Balloons/yellow-small.csv", "./restrictions.txt"],
             "justMyCode": true
         }
     ]

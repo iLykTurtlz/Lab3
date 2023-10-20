@@ -22,7 +22,7 @@ def main():
     if restrictions:
         try:
             with open(restrictions, 'r') as f:
-                restrictions =  f.read().strip().split()
+                restrictions =  f.read().strip().split(",")
                 restrictions = [int(i) for i in restrictions]
                 
             if len(restrictions) != len(data.columns) - 1:
@@ -48,7 +48,7 @@ def main():
         X = X.drop(columns=drop_cols)
 
     tree = DecisionTreeClassifier("categorical")
-    tree.fit(X, y, threshold=0.2, ratio=True)
+    tree.fit(X, y, threshold=0.01, ratio=True)
     tree_repr = tree.to_json(training, "tree.json", True)
     print(tree_repr)
 

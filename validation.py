@@ -27,16 +27,34 @@ def k_folds(X : pd.core.frame.DataFrame, y, k):
         y = shuffled_y.reset_index(drop=True)
         size = X.shape[0] // k
         remainder = X.shape[0] % k
-        Xs = [X.iloc[i*size:(i+1)*size] for i in range(k)]
-        ys = [y.iloc[i*size:(i+1)*size] for i in range(k)]
-        remainingX = X.tail(remainder)
-        remainingy = y.tail(remainder)
-        for i, ((_,row), (_,item)) in enumerate(zip(remainingX.iterrows(), remainingy.items())):
-            Xs[i].loc[len(Xs[i])] = row
-            ys[i].loc[len(ys[i])] = item
-        #assert(sum(len(x) for x in Xs) == len(X) and sum(len(Y) for Y in ys) == len(y))
-        fold_indices = [([i],[j for j in range(len(Xs)) if i!=j]) for i in range(len(Xs))]
-        return (  ((pd.concat([Xs[j] for j in train]), Xs[test[0]]), (pd.concat([ys[j] for j in train]), ys[test[0]])) for test, train in fold_indices  )
+        sizes = [size for i in range(k)]
+        for i in range(remainder):
+            sizes[i] += 1
+        curr = 0
+        startstop = []
+        for s in sizes:
+            startstop.append((curr, curr+s))
+            curr += s
+        assert(curr == X.shape[0])
+        Xs = [X.iloc[start:stop] for start, stop in startstop]
+        ys = [y.iloc[start:stop] for start, stop in startstop]
+        #Xs = [X.iloc[i*size:(i+1)*size] for i in range(k)]
+        #ys = [y.iloc[i*size:(i+1)*size] for i in range(k)]
+        # remainingX = X.tail(remainder)
+        # remainingy = y.tail(remainder)
+        # for i, ((_,row), (_,item)) in enumerate(zip(remainingX.iterrows(), remainingy.items())):
+        #     Xs[i].loc[len(Xs[i])] = row
+        #     ys[i].loc[len(ys[i])] = item
+        assert(sum(len(x) for x in Xs) == len(X) and sum(len(Y) for Y in ys) == len(y))
+        fold_indices = [(i,[j for j in range(len(Xs)) if i!=j]) for i in range(len(Xs))]
+        for test, train in fold_indices:
+            X_train = pd.concat(Xs[i] for i in train)
+            X_test = Xs[test]
+            y_train = pd.concat(ys[i] for i in train)
+            y_test = ys[test]
+            yield (X_train, X_test), (y_train, y_test)
+
+        #return (  ((pd.concat([Xs[j] for j in train]), Xs[test[0]]), (pd.concat([ys[j] for j in train]), ys[test[0]])) for test, train in fold_indices  )
 
 
 
@@ -50,16 +68,19 @@ def cross_validation(classifier, X, y, k, threshold, ratio=False):
     global_accuracy = 0
     total_predictions = 0
     for i, ((X_train, X_test), (y_train, y_test)) in enumerate(k_folds(X,y,k)):
+        print("len train",len(X_train), "; len test", len(X_test))
         classifier.fit(X_train, y_train, threshold, ratio)
-        predictions = classifier.predict(X_test)
+        predictions, _ = classifier.predict(X_test)
         for y_true, y_pred in zip(y_test, predictions):
             matrix[encoding[y_true], encoding[y_pred]] += 1
             if y_true == y_pred:
                 accuracies[i] += 1
                 global_accuracy += 1
+        print(y_true)
         accuracies[i] /= len(y_true)
         total_predictions += len(y_true)
     global_accuracy /= total_predictions
+    print("total pred",total_predictions, X.shape[0])
     assert(total_predictions == X.shape[0])
     avg_accuracy = sum(accuracies) / k
     return matrix, accuracies, global_accuracy, avg_accuracy

@@ -81,6 +81,7 @@ def main():
     # pfs, avg_pf_score = pf(matrix)
     # print("pf-scores by class", pfs)
     # print("Average pf-score:",avg_pf_score)
+    print()
 
 
 

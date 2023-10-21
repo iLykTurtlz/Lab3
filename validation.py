@@ -54,7 +54,16 @@ def cross_validation(classifier, X, y, k, threshold, ratio=False):
     encoding = {label:number for number,label in enumerate(labels)}
     n = len(labels)
     matrix = np.zeros(shape=(n,n), dtype=int)
-    accuracies = np.zeros(k)
+    if k in (0,1):
+        print("Nothing to validate if you take the entire dataset")
+        return None, None, None
+    elif k > 1:
+        accuracies = np.zeros(k)
+    elif k == -1:
+        accuracies = np.zeros(X.shape[0])
+    else:
+        print("Invalid argument: k={k}")
+        return None, None, None
     for i, ((X_train, X_test), (y_train, y_test)) in enumerate(k_folds(X,y,k)):
         #print("len train",len(X_train), "; len test", len(X_test))
         classifier.fit(X_train, y_train, threshold, ratio)

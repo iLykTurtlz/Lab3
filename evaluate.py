@@ -54,22 +54,26 @@ def main():
 
     c = DecisionTreeClassifier("categorical")
     c.fit(X, y, threshold=0.01, ratio=True)
-    matrix, accuracies, global_accuracy, avg_accuracy = cross_validation(c, X, y, k, threshold=0.01, ratio=True)
+    matrix, accuracies, avg_accuracy = cross_validation(c, X, y, k, threshold=0.01, ratio=True)
     print("Confusion matrix:")
     print(matrix)
+    class_names = np.unique(y)
+    class_names.sort()
+    
     print("Accuracy per crossval iteration:", accuracies)
-    print("Global accuracy:",global_accuracy)
     print("Average accuracy:",avg_accuracy)
     
-    recall, precision = overall_recall_precision(matrix)
-    print("Overall recall:",recall)
-    print("Overall precision",precision)
+    precisions, recalls = precision_recall_by_class(matrix)
+    print("Precision by class",precisions)
+    print("Recalls by class:", recalls)
+    f_measures = [f_measure(p,r) for p,r in zip(precisions, recalls)]
+    print("f-measures by class:",f_measures)
 
-    f_m = f_measure(precision, recall)
-    print("Overall f-measure:",f_m)
+    plot_confusion_matrix(matrix, class_names, precisions, recalls, f_measures)
+    # pfs, avg_pf_score = pf(matrix)
+    # print("pf-scores by class", pfs)
+    # print("Average pf-score:",avg_pf_score)
 
-    pf_score = pf(matrix)
-    print("Overall pf score:",pf_score)
 
 
 if __name__ == "__main__":

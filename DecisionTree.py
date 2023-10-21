@@ -117,14 +117,14 @@ class CategoricalDecisionTree(DecisionTree):
         best = None
         for a in A:
             if len(X[a]) == 0:
-                print(a)
+                #print(a)
                 continue
             p_a = DecisionTree.entropy_split(X, y, a)
             gain_a = p_0 - p_a
             if ratio:
                 #print("a=",a,"gain_a:",gain_a,"; Entropy of X[a]", DecisionTree.entropy(X[a]), "len(X[a])=",len(X[a]))
                 if (entropy_a := DecisionTree.entropy(X[a])) == 0:
-                    print(np.unique(X[a], return_counts=True))
+                    #print(np.unique(X[a], return_counts=True))
                     continue
                 gain_a = gain_a / entropy_a
             if gain_a > max_gain:

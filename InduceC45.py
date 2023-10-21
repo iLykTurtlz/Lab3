@@ -17,8 +17,6 @@ def main():
     except:
         print(f"Error: Could not read train file: {training}")
         
-
-    
     if restrictions:
         try:
             with open(restrictions, 'r') as f:
@@ -44,7 +42,7 @@ def main():
         sys.exit()
 
     if restrictions:
-        drop_cols = [col for col, drop in zip(X, restrictions) if not drop]
+        drop_cols = [col for col, drop in zip(X.columns, restrictions) if not drop]
         X = X.drop(columns=drop_cols)
 
     tree = DecisionTreeClassifier("categorical")

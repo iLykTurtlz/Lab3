@@ -1,10 +1,18 @@
 from abc import ABC, abstractmethod
 from DecisionTree import CategoricalDecisionTree
-import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import json
+from functools import partial
+
+
+class IncompatibleDimensionsError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class NotFittedError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 class Classifier(ABC):
     """
@@ -49,57 +57,18 @@ class DecisionTreeClassifier(Classifier):
         self.tree = CategoricalDecisionTree()
         self.tree.from_json(file)
         
-    def calculate_confusion_matrix(self, y_true, y_pred):
-        """
-        Manually calculate the confusion matrix.
-
-        :param y_true: List of true labels
-        :param y_pred: List of predicted labels
-        """
-        # Unique classes in the true labels
-        classes = np.unique(y_true)
-        num_classes = len(classes)
-
-        # Initialize the confusion matrix as a 2D array of zeros
-        confusion_mat = np.zeros((num_classes, num_classes), dtype=int)
-
-        # Create a mapping from class labels to indices
-        class_to_index = dict((current_class, index) for index, current_class in enumerate(classes))
-
-        # Update the confusion matrix
-        for actual, predicted in zip(y_true, y_pred):
-            actual_index = class_to_index[actual]
-            predicted_index = class_to_index[predicted]
-            confusion_mat[actual_index, predicted_index] += 1
-
-        return confusion_mat
     
-    def plot_confusion_matrix(self, confusion_matrix, class_names):
-        fig, ax = plt.subplots()
-        cax = ax.matshow(confusion_matrix, cmap='Blues')
-        
-        for i in range(len(class_names)):
-            for j in range(len(class_names)):
-                ax.text(j, i, str(confusion_matrix[i, j]), va='center', ha='center')
-        
-        # Annotate errors of commission and omission
-        for i in range(len(class_names)):
-            error_of_commission = sum(confusion_matrix[i, :]) - confusion_matrix[i, i]
-            error_of_omission = sum(confusion_matrix[:, i]) - confusion_matrix[i, i]
-            
-            ax.text(len(class_names), i, f'{error_of_omission}', va='center', ha='center', color='red')
-            ax.text(i, len(class_names), f'{error_of_commission}', va='center', ha='center', color='red')
+class Distance:
+    def euclidean_dist(x1, x2):
+        return np.sqrt(sum((x1 - x2)**2))
 
-        ax.set_xticks(np.arange(len(class_names)))
-        ax.set_yticks(np.arange(len(class_names)))
-        ax.set_xticklabels(class_names)
-        ax.set_yticklabels(class_names)
-        ax.set_xlabel('Predicted label')
-        ax.set_ylabel('True label')
-        ax.xaxis.set_ticks_position('bottom')
-        
-        plt.tight_layout()
-        plt.show()
+    def manhattan_dist(x1, x2):
+        return sum(abs(x1-x2))
+    
+    def cosine_similarity(x1, x2):
+        if sum(x1) == 0 or sum(x2) == 0:
+            return 0 #not sure what to do here
+        return -((x1 @ x2) / ((sum(x1**2))*(sum(x2**2)))) #return the opposite of the cosine similarity to be compatible with sort by increasing value
     
 
 class KNNClassifier(Classifier):
@@ -108,30 +77,36 @@ class KNNClassifier(Classifier):
     A variety of distance measures will eventually be possible, but it is Euclidean by default.
     If the predict method is called before the fit method, or if asked to fit incompatible data, an error is raised.
     """
-    def __init__(self, input_dimension, distance = "Euclidean"):
-        super().__init__(input_dimension)
-        self.distance = distance
-        self.independent_variables = None
-        self.dependent_variables = None
-    
+    def __init__(self, k, distance="euclidean"):
+        super().__init__()
+        self.k = k
+        if distance == "euclidean":
+            self.dist=Distance.euclidean_dist
+        elif distance == "manhattan":
+            self.dist=Distance.manhattan_dist
+        else:
+            raise ValueError
+        
     def fit(self, X, y):
         if len(X) != len(y):
             raise Exception("The independent and dependent variable lists must be compatible.")
-        self.X = X
-        self.y = y
+        self.data = X
+        self.labels = y
+
+    def predict(self, X):
+        if self.X == None or self.y == None:
+            raise NotFittedError(f"{type(self).__name__}.fit(X,y) must be called before this method.")
+        if X.shape[1] != self.data.shape[1]:
+            raise IncompatibleDimensionsError(f"This {type(self).__name__} can only make predictions on data points of shape {self.data[0].shape}")
+        predictions = np.zeros(len(X), dtype=self.labels.dtype)
+        for i, x in enumerate(X):
+            sorted_idx = np.apply_along_axis(partial(self.dist, x), axis=1, arr=self.data).argsort()
+            nearest_neighbors = self.labels[sorted_idx][:self.k]
+            values, counts = np.unique(nearest_neighbors, return_counts=True)
+            predictions[i] = values[np.argmax(counts)]
+        return predictions
 
 
-def main():
-    if sys.argc != 2:
-        print("Usage: python classifier.py <csv file>")
-        quit()
-    
-    
 
-    
-
-
-if __name__ == "__main__":
-    main()
 
 

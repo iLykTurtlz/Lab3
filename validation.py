@@ -9,7 +9,7 @@ def k_folds(X : pd.core.frame.DataFrame, y, k):
     """
     if k==0 or k==1:
         print("No effect")
-        return X,y
+        return (X,None),(y,None)
     elif k==-1:
         X = X.reset_index(drop=True)
         y = y.reset_index(drop=True)

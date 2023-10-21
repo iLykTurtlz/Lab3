@@ -52,6 +52,12 @@ def main():
         drop_cols = [col for col, keep in zip(X, restrictions) if not keep]
         X = X.drop(columns=drop_cols)
 
+    print("python", end=" ")
+    for arg in sys.argv:
+        print(arg, end=" ")
+    print("\n")
+
+
     c = DecisionTreeClassifier("categorical")
     c.fit(X, y, threshold=0.01, ratio=True)
     matrix, accuracies, avg_accuracy = cross_validation(c, X, y, k, threshold=0.01, ratio=True)
@@ -59,12 +65,14 @@ def main():
     print(matrix)
     class_names = np.unique(y)
     class_names.sort()
-    
+
     print("Accuracy per crossval iteration:", accuracies)
     print("Average accuracy:",avg_accuracy)
     
     precisions, recalls = precision_recall_by_class(matrix)
-    print("Precision by class",precisions)
+
+    print("Class labels:",class_names)
+    print("Precision by class:",precisions)
     print("Recalls by class:", recalls)
     f_measures = [f_measure(p,r) for p,r in zip(precisions, recalls)]
     print("f-measures by class:",f_measures)
@@ -73,6 +81,8 @@ def main():
     # pfs, avg_pf_score = pf(matrix)
     # print("pf-scores by class", pfs)
     # print("Average pf-score:",avg_pf_score)
+
+
 
 
 

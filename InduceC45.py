@@ -2,6 +2,8 @@ from Classifier import DecisionTreeClassifier
 import sys
 import pandas as pd
 
+#TODO - handle numeric data - convert to int if possible
+
 def main():
     argc = len(sys.argv)
         
@@ -53,3 +55,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+

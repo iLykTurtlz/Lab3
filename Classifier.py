@@ -23,7 +23,7 @@ class Classifier(ABC):
         raise NotImplementedError("This method has not been implemented.")
     
     @abstractmethod
-    def predict(self, x):
+    def predict(self, X):
         raise NotImplementedError("This method has not been implemented.")
 
 
@@ -57,6 +57,11 @@ class DecisionTreeClassifier(Classifier):
         self.tree = CategoricalDecisionTree()
         self.tree.from_json(file)
         
+class RandomForestClassifier(Classifier):
+    def __init__(self, m: int, k: int, N: int):
+        self.m = m
+        self.k = k
+        self.N = N
     
 class Distance:
     def euclidean_dist(x1, x2):
@@ -70,6 +75,7 @@ class Distance:
             return 0 #not sure what to do here
         return -((x1 @ x2) / ((sum(x1**2))*(sum(x2**2)))) #return the opposite of the cosine similarity to be compatible with sort by increasing value
     
+
 
 class KNNClassifier(Classifier):
     """

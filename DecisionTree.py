@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 import json
+from pandas.api.types import is_any_real_numeric_dtype
 
 class TreeReadError(Exception):
     def __init__(self, message):
@@ -40,7 +41,7 @@ class CategoricalNode:
     def get_type(self):
         return "node"
 
-class NumericalNode:
+class NumericNode:
     """Splits on an attribute at a certain splitting value.  If a data point has a value
     for the attribute less than or equal to the splitting value, it is categorized as 
     belonging to the left subtree.  Otherwise it is categorized as belonging to the right
@@ -111,7 +112,7 @@ class CategoricalDecisionTree(DecisionTree):
     def __init__(self):
         super().__init__()
 
-    def select_splitting_attribute(X, y, A, threshold, ratio):
+    def select_splitting_attribute(self, X, y, A, threshold, ratio):
         p_0 = DecisionTree.entropy(y)
         max_gain = -1 #information gain cannot be negative
         best = None
@@ -135,14 +136,14 @@ class CategoricalDecisionTree(DecisionTree):
         else:
             return None
 
-    def C45(X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold, ratio):
+    def C45(self, X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold, ratio):
         if y.unique().shape[0] == 1:
             return Leaf(y.iloc[0], 1.0)
         elif len(A) == 0:
             label, p = DecisionTree.plurality(y)
             return Leaf(label, p)
         else:
-            splitting_attr = CategoricalDecisionTree.select_splitting_attribute(X, y, A, threshold, ratio)
+            splitting_attr = self.select_splitting_attribute(X, y, A, threshold, ratio)
             if splitting_attr is None:
                 label, p = DecisionTree.plurality(y)
                 return Leaf(label, p)
@@ -168,6 +169,11 @@ class CategoricalDecisionTree(DecisionTree):
                 return current.label, current.p
             elif isinstance(current, CategoricalNode):
                 return tree_search(x, current.children[x[current.splitting_attr]])
+            elif isinstance(current, NumericNode):
+                if x[current.splitting_attr] <= current.splitting_value:
+                    return tree_search(x, current.left)
+                else:
+                    return tree_search(x, current.right)
             else:
                 print("Type of node=",type(current))
                 raise Exception("Tree error: a node that is neither CategoricalNode nor Leaf.")
@@ -223,6 +229,101 @@ class CategoricalDecisionTree(DecisionTree):
         with open(file, "r", encoding="utf-8") as f:
             dico = json.load(f)
         self.from_dict(dico['node'])
+
+
+class CompleteDecisionTree(CategoricalDecisionTree):
+    def __init__(self):
+        super.__init__()
+
+    def entropy_split(self, X, y, a, alpha):
+        """
+        """
+        X_below, y_below, X_above, y_above = X[X[a] <= alpha], y[X[a] <= alpha], X[X[a] > alpha], y[X[a] > alpha]
+        assert(X_below.shape[0] == y_below.shape[0])
+        n1 = X_below.shape[0]
+        n2 = X_above.shape[0]
+        n = X.shape[0]
+        entropy_below = DecisionTree.entropy(y_below)
+        entropy_above = DecisionTree.entropy(y_above)
+        return n1/n*entropy_below + n2/n*entropy_above
+
+    def find_best_split(self, a, X, y, p_0):
+        sorted_xa = np.unique(np.sort(X[a])) #need counts?
+        potential_splits = [(sorted_xa[i] + sorted_xa[i+1])/2 for i in range(len(sorted_xa)-1)]
+        assert(len(potential_splits) == len(X[a]) - 1)
+        best_alpha = None
+        best_gain = -1
+        for alpha in potential_splits:
+            after_split = self.entropy_split(X, y, a, alpha)
+            info_gain = p_0 - after_split
+            if info_gain > best_gain:
+                best_gain = info_gain
+                best_alpha = alpha
+        return best_alpha, best_gain
+
+    def select_splitting_attribute(self, X, y, A, threshold, ratio):
+        p_0 = DecisionTree.entropy(y)
+        max_gain = -1 #information gain cannot be negative
+        best = None #attribute
+        is_numeric = False
+        alpha = None #splitting threshold if best is_numeric
+        for a in A:
+            if len(X[a]) == 0:
+                #print(a)
+                continue
+            if is_any_real_numeric_dtype(X[a]):
+                best_alpha, info_gain = self.find_best_split(a, X, y, p_0)
+                if info_gain > max_gain:
+                    max_gain = info_gain
+                    best = a 
+                    is_numeric = True 
+                    alpha = best_alpha 
+            else:
+                p_a = DecisionTree.entropy_split(X, y, a)
+                gain_a = p_0 - p_a
+                if ratio:
+                    if (entropy_a := DecisionTree.entropy(X[a])) == 0:
+                        continue
+                    gain_a = gain_a / entropy_a
+                if gain_a > max_gain:
+                    max_gain = gain_a
+                    best = a 
+                    is_numeric = False 
+        if max_gain > threshold:
+            return best, is_numeric, alpha 
+        else:
+            return None, None, None
+        
+    def C45(self, X: pd.core.frame.DataFrame, y: pd.core.series.Series, A, threshold, ratio):
+        if y.unique().shape[0] == 1:
+            return Leaf(y.iloc[0], 1.0)
+        elif len(A) == 0:
+            label, p = DecisionTree.plurality(y)
+            return Leaf(label, p)
+        else:
+            splitting_attr, is_numeric, alpha = self.select_splitting_attribute(X, y, A, threshold, ratio)
+            if splitting_attr is None:
+                label, p = DecisionTree.plurality(y)
+                return Leaf(label, p)
+            else:
+                if not is_numeric:
+                    label, p = DecisionTree.plurality(y)
+                    children = defaultdict(lambda : Leaf(label, p))
+                    splitting_domain = np.unique(X[splitting_attr])
+                    for v in splitting_domain:
+                        Xv = X[X[splitting_attr] == v]
+                        yv = y[X[splitting_attr] == v]
+                        if Xv.shape[0] != 0:  #this test is probably useless
+                            Av = [a for a in A if a != splitting_attr] 
+                            Tv = self.C45(Xv, yv, Av, threshold, ratio)
+                            children[v] = Tv
+                    return CategoricalNode(children, splitting_attr)
+                else:
+                    Xleft, Xright = X[X[splitting_attr] <= alpha], X[X[splitting_attr] > alpha]
+                    yleft, yright = y[X[splitting_attr] <= alpha], y[X[splitting_attr] > alpha]
+                    left = self.C45(Xleft, yleft, A, threshold, ratio)
+                    right = self.C45(Xright, yright, A, threshold, ratio)
+                    return NumericNode(left, right, splitting_attr, alpha)
 
 
         

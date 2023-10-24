@@ -1,60 +1,156 @@
 {
-  "dataset": ".\\data\\Balloons\\adult+stretch.csv",
+  "dataset": "iris.data.csv",
   "node": {
-    "var": "Act",
+    "var": "petalLength",
     "edges": [
       {
         "edge": {
-          "value": "DIP",
+          "value": "<= 2.45",
           "leaf": {
-            "decision": "F",
+            "decision": "Iris-setosa",
             "p": 1.0
           }
         }
       },
       {
         "edge": {
-          "value": "STRETCH",
+          "value": "> 2.45",
           "node": {
-            "var": "Age",
+            "var": "petalWidth",
             "edges": [
               {
                 "edge": {
-                  "value": "ADULT",
-                  "leaf": {
-                    "decision": "T",
-                    "p": 1.0
+                  "value": "<= 1.75",
+                  "node": {
+                    "var": "petalLength",
+                    "edges": [
+                      {
+                        "edge": {
+                          "value": "<= 4.95",
+                          "node": {
+                            "var": "petalWidth",
+                            "edges": [
+                              {
+                                "edge": {
+                                  "value": "<= 1.65",
+                                  "leaf": {
+                                    "decision": "Iris-versicolor",
+                                    "p": 1.0
+                                  }
+                                }
+                              },
+                              {
+                                "edge": {
+                                  "value": "> 1.65",
+                                  "leaf": {
+                                    "decision": "Iris-virginica",
+                                    "p": 1.0
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "edge": {
+                          "value": "> 4.95",
+                          "node": {
+                            "var": "petalWidth",
+                            "edges": [
+                              {
+                                "edge": {
+                                  "value": "<= 1.55",
+                                  "leaf": {
+                                    "decision": "Iris-virginica",
+                                    "p": 1.0
+                                  }
+                                }
+                              },
+                              {
+                                "edge": {
+                                  "value": "> 1.55",
+                                  "node": {
+                                    "var": "petalLength",
+                                    "edges": [
+                                      {
+                                        "edge": {
+                                          "value": "<= 5.449999999999999",
+                                          "leaf": {
+                                            "decision": "Iris-versicolor",
+                                            "p": 1.0
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "edge": {
+                                          "value": "> 5.449999999999999",
+                                          "leaf": {
+                                            "decision": "Iris-virginica",
+                                            "p": 1.0
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
                   }
                 }
               },
               {
                 "edge": {
-                  "value": "CHILD",
-                  "leaf": {
-                    "decision": "F",
-                    "p": 1.0
-                  }
-                }
-              },
-              {
-                "edge": {
-                  "value": "default",
-                  "leaf": {
-                    "decision": "T",
-                    "p": 0.6666666666666666
+                  "value": "> 1.75",
+                  "node": {
+                    "var": "petalLength",
+                    "edges": [
+                      {
+                        "edge": {
+                          "value": "<= 4.85",
+                          "node": {
+                            "var": "sepalWidth",
+                            "edges": [
+                              {
+                                "edge": {
+                                  "value": "<= 3.1",
+                                  "leaf": {
+                                    "decision": "Iris-virginica",
+                                    "p": 1.0
+                                  }
+                                }
+                              },
+                              {
+                                "edge": {
+                                  "value": "> 3.1",
+                                  "leaf": {
+                                    "decision": "Iris-versicolor",
+                                    "p": 1.0
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "edge": {
+                          "value": "> 4.85",
+                          "leaf": {
+                            "decision": "Iris-virginica",
+                            "p": 1.0
+                          }
+                        }
+                      }
+                    ]
                   }
                 }
               }
             ]
-          }
-        }
-      },
-      {
-        "edge": {
-          "value": "default",
-          "leaf": {
-            "decision": "F",
-            "p": 0.6
           }
         }
       }

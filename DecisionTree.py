@@ -52,7 +52,16 @@ class NumericNode:
         self.right = right
         self.splitting_attr = splitting_attr
         self.splitting_value = splitting_value
+    
+    def to_dict(self):
+        edges = [
+            {'edge': {'value': '<= '+str(self.splitting_value), self.left.get_type(): self.left.to_dict()}},
+            {'edge': {'value': '> '+str(self.splitting_value), self.right.get_type(): self.right.to_dict()}}
+        ]
+        return {"var": str(self.splitting_attr), "edges": edges}
 
+    def get_type(self):
+        return "node"
     
 class DecisionTree(ABC):
     """The abstract base class of a decision tree.
@@ -200,15 +209,25 @@ class CategoricalDecisionTree(DecisionTree):
                 attr = tree_dict["var"]
                 #edges = [(d['edge']['value'], build(d['edge']['node'])) for d in tree_dict['edges'][:-1]]
                 edges = []
-                for d in tree_dict['edges'][:-1]: #the last edge is the default edge, which should become a function returning a Leaf
-                    if 'node' in d['edge']:
-                        edges.append((d['edge']['value'], build(d['edge']['node'])))
-                    elif 'leaf' in d['edge']:
-                        edges.append((d['edge']['value'], build(d['edge']['leaf'])))
-                    else:
-                        raise TreeReadError("Found an edge that does not lead to an internal node or leaf.")
-                children = defaultdict(lambda : build(tree_dict['edges'][-1]['edge']['leaf']), edges)
-                return CategoricalNode(children, attr)
+                first_value = tree_dict['edges'][0]['edge']['value']
+                if first_value.startswith('<') or first_value.startswith('>'):
+                    assert(len(tree_dict['edges']) == 2)
+                    splitting_value = float(first_value.split()[-1])
+                    edge1 = tree_dict['edges'][0]
+                    edge2 = tree_dict['edges'][1]
+                    left = build(edge1['edge']['node']) if 'node' in edge1['edge'] else build(edge1['edge']['leaf'])
+                    right= build(edge2['edge']['node']) if 'node' in edge2['edge'] else build(edge2['edge']['leaf'])
+                    return NumericNode(left, right, attr, splitting_value)
+                else:
+                    for d in tree_dict['edges'][:-1]: #the last edge is the default edge, which should become a function returning a Leaf
+                        if 'node' in d['edge']:
+                            edges.append((d['edge']['value'], build(d['edge']['node'])))
+                        elif 'leaf' in d['edge']:
+                            edges.append((d['edge']['value'], build(d['edge']['leaf'])))
+                        else:
+                            raise TreeReadError("Found an edge that does not lead to an internal node or leaf.")
+                    children = defaultdict(lambda : build(tree_dict['edges'][-1]['edge']['leaf']), edges)
+                    return CategoricalNode(children, attr)
             else:
                 raise TreeReadError("Found an improperly formatted internal node or leaf.")
         self.root = build(tree_dict)
@@ -233,7 +252,7 @@ class CategoricalDecisionTree(DecisionTree):
 
 class CompleteDecisionTree(CategoricalDecisionTree):
     def __init__(self):
-        super.__init__()
+        super().__init__()
 
     def entropy_split(self, X, y, a, alpha):
         """
@@ -250,7 +269,8 @@ class CompleteDecisionTree(CategoricalDecisionTree):
     def find_best_split(self, a, X, y, p_0):
         sorted_xa = np.unique(np.sort(X[a])) #need counts?
         potential_splits = [(sorted_xa[i] + sorted_xa[i+1])/2 for i in range(len(sorted_xa)-1)]
-        assert(len(potential_splits) == len(X[a]) - 1)
+        print(len(potential_splits), len(sorted_xa)-1)
+        assert(len(potential_splits) == len(sorted_xa) - 1)
         best_alpha = None
         best_gain = -1
         for alpha in potential_splits:
@@ -324,6 +344,10 @@ class CompleteDecisionTree(CategoricalDecisionTree):
                     left = self.C45(Xleft, yleft, A, threshold, ratio)
                     right = self.C45(Xright, yright, A, threshold, ratio)
                     return NumericNode(left, right, splitting_attr, alpha)
+                
+    def fit(self, X, y, threshold, ratio=False):
+        self.root = self.C45(X, y, X.columns, threshold, ratio=True)
+   
 
 
         

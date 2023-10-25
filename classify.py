@@ -27,7 +27,7 @@ def main():
         print("Could not determine and/or separate category variable.")
         sys.exit()
 
-    c = DecisionTreeClassifier("categorical")
+    c = DecisionTreeClassifier("complete")
     c.from_json(json_file)
 
     predictions = c.predict(X)
@@ -39,15 +39,15 @@ def main():
         if y_true == y_pred:
             correct += 1
     # Print detailed report
-    accuracy = len(y)/correct
+    accuracy = correct/len(y)
     print(f"Total records classified: {len(y)}")
     print(f"Correctly classified: {correct}")
     print(f"Incorrectly classified: {len(y) - correct}")
     print(f"Accuracy: {accuracy:.2f}")
     print(f"Error rate: {(1 - accuracy):.2f}")
     
-    confusion_mat = c.calculate_confusion_matrix(y, predictions[0])
-    c.plot_confusion_matrix(confusion_mat, y.unique())
+    #confusion_mat = c.calculate_confusion_matrix(y, predictions[0])
+    #c.plot_confusion_matrix(confusion_mat, y.unique())
     
 
 if __name__=="__main__":

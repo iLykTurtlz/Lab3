@@ -77,7 +77,7 @@ class RandomForestClassifier(Classifier):
             X_subset = X[cols]
             X_sample = X_subset.sample(n=self.num_data_points)
             y_sample = y.iloc[X_sample.index]
-            tree = CompleteDecisionTree
+            tree = CompleteDecisionTree()
             tree.fit(X_sample, y_sample) #modify threshold and ratio?
             self.forest.append(tree)
 

@@ -47,7 +47,7 @@ def main():
         drop_cols = [col for col, drop in zip(X.columns, restrictions) if not drop]
         X = X.drop(columns=drop_cols)
 
-    tree = DecisionTreeClassifier("categorical")
+    tree = DecisionTreeClassifier("complete")
     tree.fit(X, y, threshold=0.01, ratio=True)
     tree_repr = tree.to_json(training, "tree.json", True)
     print(tree_repr)

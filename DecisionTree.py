@@ -269,8 +269,6 @@ class CompleteDecisionTree(CategoricalDecisionTree):
     def find_best_split(self, a, X, y, p_0):
         sorted_xa = np.unique(np.sort(X[a])) #need counts?
         potential_splits = [(sorted_xa[i] + sorted_xa[i+1])/2 for i in range(len(sorted_xa)-1)]
-        print(len(potential_splits), len(sorted_xa)-1)
-        assert(len(potential_splits) == len(sorted_xa) - 1)
         best_alpha = None
         best_gain = -1
         for alpha in potential_splits:
@@ -345,8 +343,8 @@ class CompleteDecisionTree(CategoricalDecisionTree):
                     right = self.C45(Xright, yright, A, threshold, ratio)
                     return NumericNode(left, right, splitting_attr, alpha)
                 
-    def fit(self, X, y, threshold, ratio=False):
-        self.root = self.C45(X, y, X.columns, threshold, ratio=True)
+    def fit(self, X, y, threshold=0.01, ratio=False):
+        self.root = self.C45(X, y, X.columns, threshold, ratio)
    
 
 

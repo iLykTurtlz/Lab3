@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from DecisionTree import CategoricalDecisionTree
+from DecisionTree import CategoricalDecisionTree, CompleteDecisionTree
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,7 +33,7 @@ class DecisionTreeClassifier(Classifier):
     We may eventually have different types of decision trees.
     If the predict method is called before the fit method, or if asked to fit incompatible data, an error is raised.
     """
-    def __init__(self, kind='categorical'):
+    def __init__(self, kind='complete'):
         super().__init__()
         self.kind = kind
         self.tree = None
@@ -41,6 +41,9 @@ class DecisionTreeClassifier(Classifier):
     def fit(self, X, y, threshold=0.01, ratio=False):
         if self.kind == 'categorical':
             self.tree = CategoricalDecisionTree()
+            self.tree.fit(X, y, threshold, ratio)
+        elif self.kind == 'complete':
+            self.tree = CompleteDecisionTree()
             self.tree.fit(X, y, threshold, ratio)
         else:
             print("Invalid choice of DecisionTree")
@@ -58,24 +61,73 @@ class DecisionTreeClassifier(Classifier):
         self.tree.from_json(file)
         
 class RandomForestClassifier(Classifier):
-    def __init__(self, m: int, k: int, N: int):
-        self.m = m
-        self.k = k
-        self.N = N
+    def __init__(self, num_attributes: int, num_data_points: int, num_trees: int):
+        self.num_attributes = num_attributes
+        self.num_data_points = num_data_points
+        self.num_trees = num_trees
+        self.forest = None
+
+    def fit(self, X, y):
+        assert(X.shape[0] == y.shape[0])
+        X = X.reindex(drop=True) #for safety.  They must have the SAME index
+        y = y.reindex(drop=True)
+        self.forest = []
+        for i in range(self.num_trees):
+            cols = np.random.choice(X.columns, self.num_attributes, replace=False)
+            X_subset = X[cols]
+            X_sample = X_subset.sample(n=self.num_data_points)
+            y_sample = y.iloc[X_sample.index]
+            tree = CompleteDecisionTree
+            tree.fit(X_sample, y_sample) #modify threshold and ratio?
+            self.forest.append(tree)
+
+    def predict(self, X):
+        if self.forest is None:
+            return NotFittedError(f"{type(self).__name__}.fit(X,y) must be called before this method.")
+        predictions = []
+        votes = dict()
+        for x in X:
+            for tree in self.forest():
+                vote = tree.predict(x)
+                votes[vote] = 0 if vote not in votes else votes[vote] + 1
+            plurality = max(votes, key=votes.get)
+            predictions.append(plurality)
+            votes.clear()
+        return predictions
+
     
 class Distance:
+    def normalize(X):
+        mins = np.min(X, axis=0)
+        maxs = np.max(X, axis=0)
+        return np.nan_to_num((X - mins) / (maxs - mins))
+    
     def euclidean_dist(x1, x2):
-        return np.sqrt(sum((x1 - x2)**2))
+        diff = x1-x2
+        return np.sqrt(diff @ diff)
+    
+    def squared_euclidean_dist(x1, x2):
+        diff = x1 - x2
+        return diff @ diff
 
     def manhattan_dist(x1, x2):
         return sum(abs(x1-x2))
     
+    def minkowski_dist(power_root, x1, x2):
+        """power_root=1 is Manhattan distance
+        power_root=2 is Euclidean distance
+        """
+        diff = x1 - x2
+        return np.power(sum(diff ** power_root), 1/power_root)
+    
+    def chebyshev_dist(x1, x2):
+        return np.max(np.abs(x1-x2))
+    
     def cosine_similarity(x1, x2):
         if sum(x1) == 0 or sum(x2) == 0:
             return 0 #not sure what to do here
-        return -((x1 @ x2) / ((sum(x1**2))*(sum(x2**2)))) #return the opposite of the cosine similarity to be compatible with sort by increasing value
+        return -((x1 @ x2) / (np.sqrt(x1 @ x1)*np.sqrt(x2 @ x2))) #return the opposite of the cosine similarity to be compatible with sort by increasing value
     
-
 
 class KNNClassifier(Classifier):
     """

@@ -41,12 +41,14 @@ def main():
         sys.exit()
     
     # Prepare the results file
-    results_file = open('results.csv', 'w') 
+    
 
     forest = RandomForestClassifier(num_attributes, num_data_points, num_trees)
     
     k=10 #ten-fold
-    matrix, accuracies, avg_accuracy = cross_validation(forest, X, y, k, threshold=0.01, ratio=True)
+    matrix, accuracies, avg_accuracy = None, None, None
+    with open('results.csv', 'w') as results_file:
+        matrix, accuracies, avg_accuracy = cross_validation(forest, X, y, k, threshold=0.01, ratio=True, write_file=results_file)
     print("Confusion matrix:")
     print(matrix)
     class_names = np.unique(y)
@@ -67,4 +69,6 @@ def main():
 
     print()
 
+if __name__ == "__main__":
+    main()
     

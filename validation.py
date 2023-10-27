@@ -86,6 +86,11 @@ def cross_validation(classifier, X, y, k, threshold, ratio=False, write_file=Non
                 accuracies[i] += 1
         #print(y_true)
         accuracies[i] /= len(y_test)
+    if write_file:
+        results_series = pd.Series(test_result)
+        frame_dict = {'True value': y, 'Predicted value': results_series}
+        results_df = pd.DataFrame(frame_dict)
+        results_df.to_csv(path_or_buf=write_file)
     avg_accuracy = sum(accuracies) / k
     return matrix, accuracies, avg_accuracy
 

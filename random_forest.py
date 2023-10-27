@@ -33,7 +33,7 @@ def main():
         sys.exit()
         
      # Preprocess the dataset
-    try:
+    try:    
         X, y = get_data(dataset)
     except Exception as e:
         print("Could not process the dataset")
@@ -43,7 +43,7 @@ def main():
     # Prepare the results file
     
 
-    forest = RandomForestClassifier(num_attributes, num_data_points, num_trees)
+    forest = RandomForestClassifier(num_attributes, num_data_points, num_trees, threshold=0.01, ratio=True)
     
     k=10 #ten-fold
     matrix, accuracies, avg_accuracy = None, None, None
@@ -69,6 +69,4 @@ def main():
 
     print()
 
-if __name__ == "__main__":
-    main()
     

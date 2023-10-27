@@ -75,7 +75,7 @@ def cross_validation(classifier, X, y, k, threshold, ratio=False, write_file=Non
         return None, None, None
     for i, ((X_train, X_test), (y_train, y_test)) in enumerate(k_folds(X,y,k)):
         #print("len train",len(X_train), "; len test", len(X_test))
-        classifier.fit(X_train, y_train, threshold, ratio)
+        classifier.fit(X_train, y_train)
         predictions, _ = classifier.predict(X_test)
         if write_file:
             for i, prediction in zip(X_test.index, predictions):

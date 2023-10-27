@@ -73,8 +73,9 @@ class RandomForestClassifier(Classifier):
 
     def fit(self, X, y):
         assert(X.shape[0] == y.shape[0])
-        #X = X.reindex(drop=True) #for safety.  They must have the SAME index
-        #y = y.reindex(drop=True)
+        # #X = X.reindex(drop=True) #for safety.  They must have the SAME index
+        # #y = y.reindex(drop=True)
+
         
         self.forest = []
         for i in range(self.num_trees):
@@ -93,7 +94,7 @@ class RandomForestClassifier(Classifier):
         predictions = []
         votes = dict()
         for x in X:
-            for tree in self.forest:
+            for tree in self.forest():
                 vote = tree.predict(x)
                 votes[vote] = 0 if vote not in votes else votes[vote] + 1
             plurality = max(votes, key=votes.get)

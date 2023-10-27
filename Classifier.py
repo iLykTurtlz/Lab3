@@ -94,7 +94,7 @@ class RandomForestClassifier(Classifier):
         predictions = []
         votes = dict()
         for x in X:
-            for tree in self.forest():
+            for tree in self.forest:
                 vote = tree.predict(x)
                 votes[vote] = 0 if vote not in votes else votes[vote] + 1
             plurality = max(votes, key=votes.get)

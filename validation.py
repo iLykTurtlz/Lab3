@@ -6,25 +6,29 @@ def k_folds(X : pd.core.frame.DataFrame, y, k):
     """If k==0 or k==1, returns the same X and y passed in.
     Otherwise returns a generator yielding (X_train, X_test), (y_train, y_test) for k iterations.
     If k==-1, generates leave one out splits.
+    Hypothesis: indices are contiguous and start at 0, X and y have the same indices
     """
     if k==0 or k==1:
         print("No effect")
         return (X,None),(y,None)
     elif k==-1:
-        X = X.reset_index(drop=True)
-        y = y.reset_index(drop=True)
-        for i in range(len(X)):
+        # X = X.reset_index(drop=True)
+        # y = y.reset_index(drop=True)
+        for i in X.index:
             X_train = X.drop(X.index[i])
             X_test = X.iloc[[i]]
             y_train = y.drop(y.index[i])
             y_test = y.iloc[[i]]
             yield (X_train, X_test), (y_train, y_test)
     elif k > 1:
-        shuffled_idx = np.random.permutation(X.index)
-        shuffled_X = X.reindex(shuffled_idx)
-        shuffled_y = y.reindex(shuffled_idx)
-        X = shuffled_X.reset_index(drop=True)
-        y = shuffled_y.reset_index(drop=True)
+        #assert(X.index.equals(y.index))
+        indices = X.index.values
+        np.random.shuffle(indices)
+        #shuffled_idx = np.random.permutation(X.index)
+        #shuffled_X = X.reindex(shuffled_idx)
+        #shuffled_y = y.reindex(shuffled_idx)
+        # X = shuffled_X.reset_index(drop=True)
+        # y = shuffled_y.reset_index(drop=True)
         size = X.shape[0] // k
         remainder = X.shape[0] % k
         sizes = [size for _ in range(k)]
@@ -36,8 +40,11 @@ def k_folds(X : pd.core.frame.DataFrame, y, k):
             startstop.append((curr, curr+s))
             curr += s
         #assert(curr == X.shape[0])
-        Xs = [X.iloc[start:stop] for start, stop in startstop]
-        ys = [y.iloc[start:stop] for start, stop in startstop]
+        slice_indices = [indices[start:stop] for start, stop in startstop]
+        Xs = [X.loc[idx_list] for idx_list in slice_indices]
+        ys = [y.loc[idx_list] for idx_list in slice_indices]
+        # Xs = [X.iloc[start:stop] for start, stop in startstop]
+        # ys = [y.iloc[start:stop] for start, stop in startstop]
         #assert(sum(len(x) for x in Xs) == len(X) and sum(len(Y) for Y in ys) == len(y))
         fold_indices = [(i,[j for j in range(len(Xs)) if i!=j]) for i in range(len(Xs))]
         for test, train in fold_indices:
@@ -48,7 +55,7 @@ def k_folds(X : pd.core.frame.DataFrame, y, k):
             yield (X_train, X_test), (y_train, y_test)
 
 
-def cross_validation(classifier, X, y, k, threshold, ratio=False):
+def cross_validation(classifier, X, y, k, threshold, ratio=False, write_file=None):
     labels = np.unique(y)
     labels.sort()
     encoding = {label:number for number,label in enumerate(labels)}
@@ -68,6 +75,8 @@ def cross_validation(classifier, X, y, k, threshold, ratio=False):
         #print("len train",len(X_train), "; len test", len(X_test))
         classifier.fit(X_train, y_train, threshold, ratio)
         predictions, _ = classifier.predict(X_test)
+        if write_file:
+            pass
         for y_true, y_pred in zip(y_test, predictions):
             matrix[encoding[y_true], encoding[y_pred]] += 1
             if y_true == y_pred:

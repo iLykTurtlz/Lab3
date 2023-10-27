@@ -8,7 +8,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["./data/Credit Approval/crx.data.csv"],
+            "args": ["./data/Credit Approval/crx.data.csv", "8", "50", "10"],
             "justMyCode": true
         }
     ]

@@ -73,16 +73,18 @@ class RandomForestClassifier(Classifier):
 
     def fit(self, X, y):
         assert(X.shape[0] == y.shape[0])
-        X = X.reindex(drop=True) #for safety.  They must have the SAME index
-        y = y.reindex(drop=True)
+        #X = X.reindex(drop=True) #for safety.  They must have the SAME index
+        #y = y.reindex(drop=True)
+        
         self.forest = []
         for i in range(self.num_trees):
             cols = np.random.choice(X.columns, self.num_attributes, replace=False)
             X_subset = X[cols]
             X_sample = X_subset.sample(n=self.num_data_points)
-            y_sample = y.iloc[X_sample.index]
+            #y_sample = y.iloc[X_sample.index]
+            y_sample = y.drop(index=y.index.difference(X_sample.index))
             tree = CompleteDecisionTree()
-            tree.fit(X_sample, y_sample, self.threhold, self.ratio) #modify threshold and ratio?
+            tree.fit(X_sample, y_sample, self.threshold, self.ratio) #modify threshold and ratio?
             self.forest.append(tree)
 
     def predict(self, X):
@@ -91,7 +93,7 @@ class RandomForestClassifier(Classifier):
         predictions = []
         votes = dict()
         for x in X:
-            for tree in self.forest():
+            for tree in self.forest:
                 vote = tree.predict(x)
                 votes[vote] = 0 if vote not in votes else votes[vote] + 1
             plurality = max(votes, key=votes.get)

@@ -55,7 +55,7 @@ def k_folds(X : pd.core.frame.DataFrame, y, k):
             yield (X_train, X_test), (y_train, y_test)
 
 
-def cross_validation(classifier, X, y, k, threshold, ratio=False, write_file=None):
+def cross_validation(classifier, X, y, k, threshold=0.01, ratio=False, write_file=None):
     labels = np.unique(y)
     labels.sort()
     encoding = {label:number for number,label in enumerate(labels)}
@@ -73,7 +73,7 @@ def cross_validation(classifier, X, y, k, threshold, ratio=False, write_file=Non
         return None, None, None
     for i, ((X_train, X_test), (y_train, y_test)) in enumerate(k_folds(X,y,k)):
         #print("len train",len(X_train), "; len test", len(X_test))
-        classifier.fit(X_train, y_train, threshold, ratio)
+        classifier.fit(X_train, y_train)
         predictions, _ = classifier.predict(X_test)
         if write_file:
             pass

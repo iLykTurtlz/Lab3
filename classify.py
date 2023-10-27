@@ -1,6 +1,7 @@
 from Classifier import DecisionTreeClassifier
 import pandas as pd
 import sys
+from preprocessing import get_data
 
 def main():
     argc = len(sys.argv)
@@ -19,16 +20,22 @@ def main():
     X=None
     y=None
     try:
-        class_col = data.iloc[1,0]
-        data = data.drop(index=[0,1])
-        X = data.loc[:,data.columns != class_col]
-        y = data[class_col]
-    except:
-        print("Could not determine and/or separate category variable.")
+        # class_col = data.iloc[1,0]
+        # data = data.drop(index=[0,1])
+        # X = data.loc[:,data.columns != class_col]
+        # y = data[class_col]
+        X,y = get_data(data)
+    except pd.errors.ParserError:
+        print("Could not read metadata")
+        sys.exit()
+    except Exception as e:
+        print(e)
         sys.exit()
 
     c = DecisionTreeClassifier("complete")
     c.from_json(json_file)
+
+    #print(c.to_dict())
 
     predictions = c.predict(X)
     #print(predictions)
@@ -36,6 +43,7 @@ def main():
 
     correct = 0
     for y_true, y_pred in zip(y,predictions[0]):
+        #print("y_true:",type(y_true),"; y_pred:",type(y_pred))
         if y_true == y_pred:
             correct += 1
     # Print detailed report

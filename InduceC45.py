@@ -1,8 +1,9 @@
 from Classifier import DecisionTreeClassifier
 import sys
 import pandas as pd
+from preprocessing import get_data
 
-#TODO - handle numeric data - convert to int if possible
+
 
 def main():
     argc = len(sys.argv)
@@ -26,7 +27,7 @@ def main():
                 restrictions = [int(i) for i in restrictions]
                 
             if len(restrictions) != len(data.columns) - 1:
-                print(f"Error: {sys.argv[2]} does not have the correct ammount of columns.")
+                print(f"Error: {sys.argv[2]} does not have the correct number of columns.")
                 sys.exit()
         except:
             print("Restrictions file unreadable")
@@ -35,12 +36,16 @@ def main():
     X=None
     y=None
     try:
-        class_col = data.iloc[1,0]
-        data = data.drop(index=[0,1])
-        X = data.loc[:,data.columns != class_col]
-        y = data[class_col]
-    except:
-        print("Could not determine and/or separate category variable.")
+        # class_col = data.iloc[1,0]
+        # data = data.drop(index=[0,1])
+        # X = data.loc[:,data.columns != class_col]
+        # y = data[class_col]
+        X, y = get_data(data)
+    except pd.errors.ParserError:
+        print("Could not read metadata")
+        sys.exit()
+    except Exception as e:
+        print(e)
         sys.exit()
 
     if restrictions:

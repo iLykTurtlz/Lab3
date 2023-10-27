@@ -1,5 +1,5 @@
 {
-  "dataset": ".\\data\\Credit Approval\\crx.data.csv",
+  "dataset": "./data/Credit Approval/crx.data.csv",
   "node": {
     "var": "A2",
     "edges": [

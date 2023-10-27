@@ -116,6 +116,7 @@ class Distance:
     def minkowski_dist(power_root, x1, x2):
         """power_root=1 is Manhattan distance
         power_root=2 is Euclidean distance
+        Partial application needed for compatibility with predict.
         """
         diff = x1 - x2
         return np.power(sum(diff ** power_root), 1/power_root)

@@ -2,6 +2,7 @@ import pandas as pd
 from validation import *
 from Classifier import DecisionTreeClassifier
 import sys
+from preprocessing import get_data
 
 def main():
     argc = len(sys.argv)
@@ -40,12 +41,16 @@ def main():
     X=None
     y=None
     try:
-        class_col = data.iloc[1,0]
-        data = data.drop(index=[0,1])
-        X = data.loc[:,data.columns != class_col]
-        y = data[class_col]
-    except:
-        print("Could not determine and/or separate category variable.")
+        # class_col = data.iloc[1,0]
+        # data = data.drop(index=[0,1])
+        # X = data.loc[:,data.columns != class_col]
+        # y = data[class_col]
+        X, y = get_data(data)
+    except pd.errors.ParserError:
+        print("Could not read metadata")
+        sys.exit()
+    except Exception as e:
+        print(e)
         sys.exit()
 
     if restrictions:
@@ -58,7 +63,7 @@ def main():
     print("\n")
 
 
-    c = DecisionTreeClassifier("categorical")
+    c = DecisionTreeClassifier("complete")
     c.fit(X, y, threshold=0.01, ratio=True)
     matrix, accuracies, avg_accuracy = cross_validation(c, X, y, k, threshold=0.01, ratio=True)
     print("Confusion matrix:")

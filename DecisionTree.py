@@ -47,16 +47,18 @@ class NumericNode:
     belonging to the left subtree.  Otherwise it is categorized as belonging to the right
     subtree.
     """
-    def __init__(self, left, right, splitting_attr, splitting_value):
+    def __init__(self, left, right, splitting_attr, splitting_value, default: Leaf):
         self.left = left
         self.right = right
         self.splitting_attr = splitting_attr
         self.splitting_value = splitting_value
+        self.default = default
     
     def to_dict(self):
         edges = [
             {'edge': {'value': '<= '+str(self.splitting_value), self.left.get_type(): self.left.to_dict()}},
-            {'edge': {'value': '> '+str(self.splitting_value), self.right.get_type(): self.right.to_dict()}}
+            {'edge': {'value': '> '+str(self.splitting_value), self.right.get_type(): self.right.to_dict()}},
+            {'edge': {'value': 'default', 'leaf': self.default.to_dict()}}
         ]
         return {"var": str(self.splitting_attr), "edges": edges}
 
@@ -84,6 +86,8 @@ class DecisionTree(ABC):
         raise NotImplementedError("This method has not been implemented")
     
     def entropy(y):
+        if len(y) == 0:   #all null => 0 entropy
+            return 0
         n = y.shape[0]
         _, counts = np.unique(y, return_counts=True)
         probabilities = counts / n
@@ -91,23 +95,24 @@ class DecisionTree(ABC):
             return 0
         zero = probabilities.sum() - 1
         if zero > 0.0001 or zero < -0.0001:
+            print(y)
+            print(probabilities)
             raise Exception("Not a probability distribution.")
         return - np.sum([p * math.log2(p) for p in probabilities])
 
     def entropy_split(X, y, a):
         """
-        Returns the entropy after a (hypothetical) split on the attribute a
-        If a is real-valued or integral with more than 5 distinct values, 
-        this function will find the best splitting threshold to create two child nodes.
-        
+        Returns the entropy after a (hypothetical) split on the attribute a        
         """
-        assert(X.shape[0] == y.shape[0])
-        n = X.shape[0]
-        domain_a, counts = np.unique(X[a], return_counts=True)
+        X_no_na = X.dropna()
+        y_no_na = y.drop(index=y.index.difference(X_no_na.index))
+        #assert(X.shape[0] == y.shape[0])
+        n = X_no_na.shape[0]
+        domain_a, counts = np.unique(X_no_na[a], return_counts=True)
         result = 0
         for value, count in zip(domain_a, counts):
             probability = count / n
-            result += probability * DecisionTree.entropy(y[X[a] == value])
+            result += probability * DecisionTree.entropy(y_no_na[X_no_na[a] == value])
         return result
 
         
@@ -133,7 +138,7 @@ class CategoricalDecisionTree(DecisionTree):
             gain_a = p_0 - p_a
             if ratio:
                 #print("a=",a,"gain_a:",gain_a,"; Entropy of X[a]", DecisionTree.entropy(X[a]), "len(X[a])=",len(X[a]))
-                if (entropy_a := DecisionTree.entropy(X[a])) == 0:
+                if (entropy_a := DecisionTree.entropy(X[a].dropna())) == 0:
                     #print(np.unique(X[a], return_counts=True))
                     continue
                 gain_a = gain_a / entropy_a
@@ -181,8 +186,10 @@ class CategoricalDecisionTree(DecisionTree):
             elif isinstance(current, NumericNode):
                 if x[current.splitting_attr] <= current.splitting_value:
                     return tree_search(x, current.left)
-                else:
+                elif x[current.splitting_attr] > current.splitting_value:
                     return tree_search(x, current.right)
+                else:
+                    return tree_search(x, current.default)
             else:
                 print("Type of node=",type(current))
                 raise Exception("Tree error: a node that is neither CategoricalNode nor Leaf.")
@@ -210,14 +217,16 @@ class CategoricalDecisionTree(DecisionTree):
                 #edges = [(d['edge']['value'], build(d['edge']['node'])) for d in tree_dict['edges'][:-1]]
                 edges = []
                 first_value = tree_dict['edges'][0]['edge']['value']
-                if first_value.startswith('<') or first_value.startswith('>'):
-                    assert(len(tree_dict['edges']) == 2)
+                #print(first_value)
+                
+                if str(first_value).startswith('<') or str(first_value).startswith('>'):
+                    #assert(len(tree_dict['edges']) == 2)
                     splitting_value = float(first_value.split()[-1])
                     edge1 = tree_dict['edges'][0]
                     edge2 = tree_dict['edges'][1]
                     left = build(edge1['edge']['node']) if 'node' in edge1['edge'] else build(edge1['edge']['leaf'])
                     right= build(edge2['edge']['node']) if 'node' in edge2['edge'] else build(edge2['edge']['leaf'])
-                    return NumericNode(left, right, attr, splitting_value)
+                    return NumericNode(left, right, attr, splitting_value, build(tree_dict['edges'][-1]['edge']['leaf']))
                 else:
                     for d in tree_dict['edges'][:-1]: #the last edge is the default edge, which should become a function returning a Leaf
                         if 'node' in d['edge']:
@@ -267,12 +276,14 @@ class CompleteDecisionTree(CategoricalDecisionTree):
         return n1/n*entropy_below + n2/n*entropy_above
 
     def find_best_split(self, a, X, y, p_0):
-        sorted_xa = np.unique(np.sort(X[a])) #need counts?
+        X_no_na = X.dropna(subset=[a])
+        y_no_na = y.drop(index=y.index.difference(X_no_na.index))
+        sorted_xa = np.unique(np.sort(X_no_na[a])) #need counts?
         potential_splits = [(sorted_xa[i] + sorted_xa[i+1])/2 for i in range(len(sorted_xa)-1)]
         best_alpha = None
         best_gain = -1
         for alpha in potential_splits:
-            after_split = self.entropy_split(X, y, a, alpha)
+            after_split = self.entropy_split(X_no_na, y_no_na, a, alpha)
             info_gain = p_0 - after_split
             if info_gain > best_gain:
                 best_gain = info_gain
@@ -300,7 +311,7 @@ class CompleteDecisionTree(CategoricalDecisionTree):
                 p_a = DecisionTree.entropy_split(X, y, a)
                 gain_a = p_0 - p_a
                 if ratio:
-                    if (entropy_a := DecisionTree.entropy(X[a])) == 0:
+                    if (entropy_a := DecisionTree.entropy(X[a].dropna())) == 0:
                         continue
                     gain_a = gain_a / entropy_a
                 if gain_a > max_gain:
@@ -320,14 +331,19 @@ class CompleteDecisionTree(CategoricalDecisionTree):
             return Leaf(label, p)
         else:
             splitting_attr, is_numeric, alpha = self.select_splitting_attribute(X, y, A, threshold, ratio)
+    
+            label, p = DecisionTree.plurality(y)
             if splitting_attr is None:
-                label, p = DecisionTree.plurality(y)
                 return Leaf(label, p)
             else:
+                X = X.dropna(subset=[splitting_attr])
+                y = y.drop(index=y.index.difference(X.index))
                 if not is_numeric:
-                    label, p = DecisionTree.plurality(y)
                     children = defaultdict(lambda : Leaf(label, p))
+                    #splitting_values = X[splitting_attr]
+                    #splitting_values = splitting_values.dropna()    #no null values will propagate down the tree
                     splitting_domain = np.unique(X[splitting_attr])
+                   
                     for v in splitting_domain:
                         Xv = X[X[splitting_attr] == v]
                         yv = y[X[splitting_attr] == v]
@@ -341,7 +357,7 @@ class CompleteDecisionTree(CategoricalDecisionTree):
                     yleft, yright = y[X[splitting_attr] <= alpha], y[X[splitting_attr] > alpha]
                     left = self.C45(Xleft, yleft, A, threshold, ratio)
                     right = self.C45(Xright, yright, A, threshold, ratio)
-                    return NumericNode(left, right, splitting_attr, alpha)
+                    return NumericNode(left, right, splitting_attr, alpha, Leaf(label, p))
                 
     def fit(self, X, y, threshold=0.01, ratio=False):
         self.root = self.C45(X, y, X.columns, threshold, ratio)

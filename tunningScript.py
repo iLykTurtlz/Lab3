@@ -20,7 +20,7 @@ def main():
     best_params = {}
 
     # Starting parameters for tuning
-    num_attributes_list = [5, 10, 15]  # Example values, adjust based on your dataset and preference
+    num_attributes_list = [2,3,4,5,6]  # Example values, adjust based on your dataset and preference
     num_trees_list = [100, 200]  # Example values, adjust as needed
     
         # Placeholder for the best model's metrics
@@ -35,7 +35,7 @@ def main():
 
     try:
         training_file = sys.argv[1]
-        num_data_points = sys.argv[2]
+        num_data_points = int(sys.argv[2])
     except ValueError:
         print("Couldn't read one or more input parameters.")
         sys.exit()

@@ -105,6 +105,7 @@ class RandomForestClassifier(Classifier):
 
     
 class Distance:
+    #TODO normalize numerical columns
     def normalize(X):
         mins = np.min(X, axis=0)
         maxs = np.max(X, axis=0)
@@ -147,6 +148,7 @@ class KNNClassifier(Classifier):
     def __init__(self, k, distance="euclidean"):
         super().__init__()
         self.k = k
+        self.matrix = None
         if distance == "euclidean":
             self.dist=Distance.euclidean_dist
         elif distance == "manhattan":
@@ -166,13 +168,27 @@ class KNNClassifier(Classifier):
         if X.shape[1] != self.data.shape[1]:
             raise IncompatibleDimensionsError(f"This {type(self).__name__} can only make predictions on data points of shape {self.data[0].shape}")
         predictions = np.zeros(len(X), dtype=self.labels.dtype)
+        self.matrix = np.zeros(shape=(len(X), len(self.data)), dtype=int)
         for i, x in enumerate(X):
             sorted_idx = np.apply_along_axis(partial(self.dist, x), axis=1, arr=self.data).argsort()
+            self.matrix[i] = sorted_idx
             nearest_neighbors = self.labels[sorted_idx][:self.k]
             values, counts = np.unique(nearest_neighbors, return_counts=True)
             predictions[i] = values[np.argmax(counts)]
         return predictions
 
+    def predict_forall_k(self):
+        def most_frequent(row):
+            values, counts = np.unique(row, return_counts=True)
+            return values[np.argmax(counts)]
+        if self.matrix is None:
+            raise NotFittedError(f"{type(self).__name__}.fit(X,y) must be called before this method.")
+        for k in range(1,self.matrix.shape[1]):
+            nearest_neighbors = self.matrix[:,:k]
+            yield k, np.apply_along_axis(most_frequent, axis=1, arr=self.labels[nearest_neighbors])
+    
+
+        
 
 
 

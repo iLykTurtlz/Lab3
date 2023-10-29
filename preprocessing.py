@@ -28,6 +28,8 @@ def get_data(D: pd.core.frame.DataFrame)->tuple[pd.core.frame.DataFrame, pd.core
         else:
             X.loc[:,col_name] = X[col_name].astype("str")
     X = X.replace('?', np.nan) #other values to be interpreted as null?
+    X = X.reset_index(drop=True)
+    y = y.reset_index(drop=True)
     return X, y
     
 

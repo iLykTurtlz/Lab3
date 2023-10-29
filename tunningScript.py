@@ -1,5 +1,5 @@
 from Classifier import RandomForestClassifier
-import json
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,10 +26,6 @@ def main():
         # Placeholder for the best model's metrics
     best_accuracy = 0
     best_params = {}
-
-    # Starting parameters for tuning
-    num_attributes_list = [5, 10, 15]  # Example values, adjust based on your dataset and preference
-    num_trees_list = [100, 200]  # Example values, adjust as needed
     
     argc = len(sys.argv)
     if argc < 5:
@@ -77,9 +73,26 @@ def main():
                     best_params = {'NumAttributes': curr_num_attributes, 'NumTrees': curr_num_trees}
 
                 logging.info(f"Average accuracy: {avg_accuracy}")
+                # After each model evaluation, plot the confusion matrix and save it
+                class_names = np.unique(y)
+                class_names.sort()
+                precisions, recalls = precision_recall_by_class(matrix)
+                f_measures = [f_measure(p, r) for p, r in zip(precisions, recalls)]
+                
+                # Check if the directory exists
+                if not os.path.exists("output"):
+                    # If not, create the directory
+                    os.makedirs("output")
+                
+                plot_title = f"Confusion Matrix NumAttributes_{curr_num_attributes}_NumTrees_{curr_num_trees}"
+                plot_confusion_matrix(matrix, class_names, precisions, recalls, f_measures, title=plot_title)
+                plt.savefig(os.path.join("output", f"{plot_title}.png"))  # This saves the current confusion matrix plot
 
             except Exception as e:
                 logging.error(f"An error occurred: {str(e)}")
+                
+
+    print(f"Execution finished. Log file and confusion matrices have been saved. Best model parameters: {best_params} with accuracy: {best_accuracy}")
 
     logging.info(f"Best parameters: {best_params} with accuracy: {best_accuracy}")
 

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from pandas.api.types import is_any_real_numeric_dtype
 
 
 def get_metadata(D: pd.core.frame.DataFrame)->tuple[str, np.ndarray]:
@@ -28,6 +29,20 @@ def get_data(D: pd.core.frame.DataFrame)->tuple[pd.core.frame.DataFrame, pd.core
         else:
             X.loc[:,col_name] = X[col_name].astype("str")
     X = X.replace('?', np.nan) #other values to be interpreted as null?
+    X = X.reset_index(drop=True)
+    y = y.reset_index(drop=True)
     return X, y
-    
+
+def normalize_column(X):
+    mins = np.min(X, axis=0)
+    maxs = np.max(X, axis=0)
+    return np.nan_to_num((X - mins) / (maxs - mins))
+
+def normalize(D: pd.core.frame.Dataframe)->pd.core.frame.DataFrame:
+    for col in D.columns:
+        if is_any_real_numeric_dtype(D[col]):
+            D[col] = normalize_column(D[col])
+    return D
+        
+
 

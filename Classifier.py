@@ -84,16 +84,17 @@ class RandomForestClassifier(Classifier):
     def predict(self, X):
         if self.forest is None:
             return NotFittedError(f"{type(self).__name__}.fit(X,y) must be called before this method.")
-        predictions = []
-        votes = dict()
-        for x in X:
-            for tree in self.forest():
-                vote = tree.predict(x)
-                votes[vote] = 0 if vote not in votes else votes[vote] + 1
-            plurality = max(votes, key=votes.get)
-            predictions.append(plurality)
-            votes.clear()
-        return predictions
+        prediction_list = []
+        #votes = dict()
+        for tree in self.forest:
+            predictions,_ = tree.predict(X)
+            prediction_list.append(predictions)
+        result = []
+        for i in range(len(X)):
+            votes = np.array([pred[i] for pred in prediction_list])
+            values, counts = np.unique(votes, return_counts=True)
+            result.append(values[np.argmax(counts)])
+        return result, None
 
     
 class Distance:

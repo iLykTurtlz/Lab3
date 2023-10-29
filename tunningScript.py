@@ -28,16 +28,14 @@ def main():
     best_params = {}
     
     argc = len(sys.argv)
-    if argc < 5:
-        print("Usage: python3 randomForest.py <TrainingSetFile.csv> <NumAttributes> <NumDataPoints> <NumTrees>")
+    if argc < 3: #lol <3
+        print("Usage: tunningScript.py <TrainingSetFile.csv> <NumDataPoints>")
         sys.exit()
 
 
     try:
         training_file = sys.argv[1]
-        num_attributes = int(sys.argv[2])
-        num_data_points = int(sys.argv[3])
-        num_trees = int(sys.argv[4])
+        num_data_points = sys.argv[2]
     except ValueError:
         print("Couldn't read one or more input parameters.")
         sys.exit()
@@ -97,3 +95,5 @@ def main():
     logging.info(f"Best parameters: {best_params} with accuracy: {best_accuracy}")
 
 
+if __name__ == "__main__":
+    main()

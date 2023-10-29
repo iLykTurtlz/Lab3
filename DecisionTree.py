@@ -72,7 +72,7 @@ class DecisionTree(ABC):
         self.root = None
 
     @abstractmethod
-    def fit(self, X, y, threshold=0.001): #X = data, y = labels
+    def fit(self, X, y, threshold=0.001, ratio=False): #X = data, y = labels
         """
         Constructs a tree and assigns the root to self.root
         """

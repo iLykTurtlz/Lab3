@@ -33,18 +33,20 @@ class DecisionTreeClassifier(Classifier):
     We may eventually have different types of decision trees.
     If the predict method is called before the fit method, or if asked to fit incompatible data, an error is raised.
     """
-    def __init__(self, kind='complete'):
+    def __init__(self, kind='complete', threshold=0.01, ratio=False):
         super().__init__()
         self.kind = kind
         self.tree = None
+        self.threshold=threshold
+        self.ratio = ratio
 
-    def fit(self, X, y, threshold=0.01, ratio=False):
+    def fit(self, X, y):
         if self.kind == 'categorical':
             self.tree = CategoricalDecisionTree()
-            self.tree.fit(X, y, threshold, ratio)
+            self.tree.fit(X, y, self.threshold, self.ratio)
         elif self.kind == 'complete':
             self.tree = CompleteDecisionTree()
-            self.tree.fit(X, y, threshold, ratio)
+            self.tree.fit(X, y, self.threshold, self.ratio)
         else:
             print("Invalid choice of DecisionTree")
 
@@ -61,24 +63,29 @@ class DecisionTreeClassifier(Classifier):
         self.tree.from_json(file)
         
 class RandomForestClassifier(Classifier):
-    def __init__(self, num_attributes: int, num_data_points: int, num_trees: int):
+    def __init__(self, num_attributes: int, num_data_points: int, num_trees: int, threshold=0.01, ratio=False):
         self.num_attributes = num_attributes
         self.num_data_points = num_data_points
         self.num_trees = num_trees
         self.forest = None
+        self.threshold = threshold
+        self.ratio = ratio
 
     def fit(self, X, y):
         assert(X.shape[0] == y.shape[0])
-        X = X.reindex(drop=True) #for safety.  They must have the SAME index
-        y = y.reindex(drop=True)
+        # #X = X.reindex(drop=True) #for safety.  They must have the SAME index
+        # #y = y.reindex(drop=True)
+
+        
         self.forest = []
         for i in range(self.num_trees):
             cols = np.random.choice(X.columns, self.num_attributes, replace=False)
             X_subset = X[cols]
             X_sample = X_subset.sample(n=self.num_data_points)
-            y_sample = y.iloc[X_sample.index]
+            #y_sample = y.iloc[X_sample.index]
+            y_sample = y.drop(index=y.index.difference(X_sample.index))
             tree = CompleteDecisionTree()
-            tree.fit(X_sample, y_sample) #modify threshold and ratio?
+            tree.fit(X_sample, y_sample, self.threshold, self.ratio) #modify threshold and ratio?
             self.forest.append(tree)
 
     def predict(self, X):
@@ -165,6 +172,7 @@ class KNNClassifier(Classifier):
             values, counts = np.unique(nearest_neighbors, return_counts=True)
             predictions[i] = values[np.argmax(counts)]
         return predictions
+
 
 
 

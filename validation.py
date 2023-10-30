@@ -112,7 +112,7 @@ def knn_cross_validation(knn_classifier, X, y, nb_folds, min_k, max_k):
     else:
         print("Invalid argument: k={k}")
         return None, None, None
-    matrices = [np.zeros(shape=(n,n)) for _ in range(nb_folds)]
+    matrices = [np.zeros(shape=(n,n), dtype=int) for _ in range(max_k - min_k + 1)]
     for i, ((X_train, X_test), (y_train, y_test)) in enumerate(k_folds(X,y,nb_folds)):
         #print("len train",len(X_train), "; len test", len(X_test))
         knn_classifier.fit(X_train, y_train)

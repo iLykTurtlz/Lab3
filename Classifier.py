@@ -205,7 +205,6 @@ class KNNClassifier(Classifier):
             nb_tot = self.data.shape[1]
             distances = np.zeros(len(self.data))
             for j, (x_cat, x_cont) in enumerate(zip(catX.to_numpy(), contX.to_numpy())):
-                ic(j)
                 for i, (cat, cont) in enumerate(zip(cat_data.to_numpy(), cont_data.to_numpy())):
                     distances[i] = (nb_cat / nb_tot) * cat_dist(x_cat, cat) + (nb_cont / nb_tot) * cont_dist(x_cont, cont)
                 #ic(distances)
@@ -232,9 +231,6 @@ class KNNClassifier(Classifier):
         if max_k > self.matrix.shape[1]:
             max_k = self.matrix.shape[1]
         for k in range(min_k, max_k + 1):
-            ic(k)
-            #ic(self.matrix[:,:k])
-            #ic(self.labels)
             nearest_neighbors = np.array([self.labels[row] for row in self.matrix[:,:k]])
             yield k, [self.most_frequent(ns) for ns in nearest_neighbors] #np.apply_along_axis(self.most_frequent, axis=1, arr=nearest_neighbors) #apply_along_axis truncates strings!  No kwarg to prevent this!
     

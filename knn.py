@@ -5,7 +5,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sys
 from validation import *
-from tabulate import tabulate
 
 
 
@@ -53,25 +52,52 @@ def main():
     knn = KNNClassifier(1, distance, p)
     
     nb_folds=10 
-    matrices, accuracies, avg_accuracies = None, None, None
-    with open('results.csv', 'w') as results_file:
-        matrices, accuracies, avg_accuracies = knn_cross_validation(knn, X, y, nb_folds, min_k, max_k)
+
+    matrices, accuracies, avg_accuracies = knn_cross_validation(knn, X, y, nb_folds, min_k, max_k)
 
     for i, matrix in enumerate(matrices):
         k = min_k + i
-        print("Confusion matrix for k =:", k)
-        print(tabulate(matrix, tablefmt="psql"))
+        print("Confusion matrix for k =", k)
+        print(matrix)
         class_names = np.unique(y)
         class_names.sort()
 
         #print("Accuracy per crossval iteration:", accuracies)
-        print("Average accuracies:",avg_accuracies)
+        #print("Average accuracies:",avg_accuracies)
+        print("Average accuracy:",avg_accuracies[i])
+        # print("Accuracy for each cross-validation split:")
+        # for acc in accuracies:
+        #     print("\t"+str(accuracies[i]))
         
         precisions, recalls = precision_recall_by_class(matrix)
         f_measures = [f_measure(p,r) for p,r in zip(precisions, recalls)]
-        print("f-measures by class:",f_measures)
 
-        print(tabulate([['Class labels:']+class_names, ['Precision by class:'] + precisions, ['Recalls by class:'] + recalls, ['F-measures by class:']+f_measures], tablefmt='psql'))
+
+
+        row_names = ['Precision', 'Recall', 'F-measure']
+        data = [precisions, recalls, f_measures]
+
+        column_width = max(
+            max(len(str(row[i])) for row in data) for i in range(len(class_names))
+        )
+        column_width = max(column_width, max(len(name) for name in row_names))
+        column_width = max(column_width, 12)
+
+        print(f"{' ' * column_width:<{column_width}}", end=' ')
+        for name in class_names:
+            print(f"{name:^{column_width}}", end=' ')
+        print()
+
+        for i, row in enumerate(data):
+            print(f"{row_names[i]:<{column_width}}", end=' ')
+            for item in row:
+                print(f"{item:>{column_width}.6f}", end=' ')
+            print()
+
+
+        #print("f-measures by class:",f_measures)
+
+        
         # print("Class labels:",class_names)
         # print("Precision by class:",precisions)
         # print("Recalls by class:", recalls)

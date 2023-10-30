@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from functools import partial
+from pandas.core.dtypes.common import is_numeric_dtype
+from icecream import ic
 
 
 class IncompatibleDimensionsError(Exception):
@@ -105,11 +107,14 @@ class RandomForestClassifier(Classifier):
 
     
 class Distance:
-    #TODO normalize numerical columns
-    def normalize(X):
-        mins = np.min(X, axis=0)
-        maxs = np.max(X, axis=0)
-        return np.nan_to_num((X - mins) / (maxs - mins))
+    # def separate_discrete_continuous(D):
+    #     discrete = [col for col in D.columns if not is_numeric_dtype(D[col])]
+    #     continuous = [col for col in D.columns if is_numeric_dtype(D[col])]
+    #     return D[discrete], D[continuous]
+    
+    def dice(x1, x2):
+        """Hypothesis: x1 and x2 are categorical only"""
+        return 1 - (2 * len(x1[x1==x2]) / (len(x1) + len(x2)))
     
     def euclidean_dist(x1, x2):
         diff = x1-x2
@@ -127,7 +132,7 @@ class Distance:
         power_root=2 is Euclidean distance
         Partial application needed for compatibility with predict.
         """
-        diff = x1 - x2
+        diff = np.abs(x1 - x2)
         return np.power(sum(diff ** power_root), 1/power_root)
     
     def chebyshev_dist(x1, x2):
@@ -139,13 +144,15 @@ class Distance:
         return -((x1 @ x2) / (np.sqrt(x1 @ x1)*np.sqrt(x2 @ x2))) #return the opposite of the cosine similarity to be compatible with sort by increasing value
     
 
+        
+
 class KNNClassifier(Classifier):
     """
     This classifier stores the data passed in when the fit method is called.
     A variety of distance measures will eventually be possible, but it is Euclidean by default.
     If the predict method is called before the fit method, or if asked to fit incompatible data, an error is raised.
     """
-    def __init__(self, k, distance="euclidean"):
+    def __init__(self, k, distance="euclidean", power_root=None):
         super().__init__()
         self.k = k
         self.matrix = None
@@ -153,39 +160,83 @@ class KNNClassifier(Classifier):
             self.dist=Distance.euclidean_dist
         elif distance == "manhattan":
             self.dist=Distance.manhattan_dist
+        elif distance == "cosine":
+            self.dist = Distance.cosine_similarity
+        elif distance == "chebyshev":
+            self.dist = Distance.chebyshev_dist
+        elif distance == "minkowski":
+            if power_root is None:
+                raise Exception("minkowski distance requires a power_root argument.")
+            self.dist = partial(Distance.minkowski_dist, power_root)
         else:
             raise ValueError
         
     def fit(self, X, y):
         if len(X) != len(y):
             raise Exception("The independent and dependent variable lists must be compatible.")
-        self.data = X
-        self.labels = y
+        self.data = X.reset_index(drop=True)
+        self.labels = y.reset_index(drop=True)
+
+    def most_frequent(self, row):
+            values, counts = np.unique(row, return_counts=True)
+            return values[np.argmax(counts)]
 
     def predict(self, X):
-        if self.X == None or self.y == None:
+        if self.data is None or self.labels is None:
             raise NotFittedError(f"{type(self).__name__}.fit(X,y) must be called before this method.")
         if X.shape[1] != self.data.shape[1]:
             raise IncompatibleDimensionsError(f"This {type(self).__name__} can only make predictions on data points of shape {self.data[0].shape}")
+        
         predictions = np.zeros(len(X), dtype=self.labels.dtype)
-        self.matrix = np.zeros(shape=(len(X), len(self.data)), dtype=int)
-        for i, x in enumerate(X):
-            sorted_idx = np.apply_along_axis(partial(self.dist, x), axis=1, arr=self.data).argsort()
-            self.matrix[i] = sorted_idx
-            nearest_neighbors = self.labels[sorted_idx][:self.k]
-            values, counts = np.unique(nearest_neighbors, return_counts=True)
-            predictions[i] = values[np.argmax(counts)]
-        return predictions
+        self.matrix = []
+        if X.select_dtypes(include='object').shape[1] > 0: #if there are categorical attributes
+            cat_dist = Distance.dice
+            cont_dist = self.dist
+            catX = X.select_dtypes(include="object") 
+            contX = X.select_dtypes(include=np.number)
+            cat_data = self.data.select_dtypes(include='object')
+            cont_data = self.data.select_dtypes(include=np.number)
+            #ic(cat_data)
+            #ic(cont_data.to_numpy())
+            if catX.shape[1] != cat_data.shape[1] or contX.shape[1] != cont_data.shape[1]:
+                raise IncompatibleDimensionsError(f"This {type(self).__name__} can only make predictions on data points with {cat_data.shape[1]} categorical attributes and {cont_data.shape[1]} continuous attributes.")
+            nb_cat = cat_data.shape[1]
+            nb_cont = cont_data.shape[1]
+            nb_tot = self.data.shape[1]
+            distances = np.zeros(len(self.data))
+            for j, (x_cat, x_cont) in enumerate(zip(catX.to_numpy(), contX.to_numpy())):
+                ic(j)
+                for i, (cat, cont) in enumerate(zip(cat_data.to_numpy(), cont_data.to_numpy())):
+                    distances[i] = (nb_cat / nb_tot) * cat_dist(x_cat, cat) + (nb_cont / nb_tot) * cont_dist(x_cont, cont)
+                #ic(distances)
+                sorted_idx = distances.argsort()
+                #ic(sorted_idx)
+                self.matrix.append(sorted_idx)
+                #ic(self.labels)
+                nearest_neighbors = self.labels[sorted_idx]#[:self.k]
+                #ic(nearest_neighbors)
+                nearest_neighbors = nearest_neighbors.head(self.k)
+                predictions[j] = self.most_frequent(nearest_neighbors)
+            self.matrix = np.asarray(self.matrix)
+        else:
+            for i, x in enumerate(X.to_numpy()):
+                sorted_idx = np.apply_along_axis(partial(self.dist, x), axis=1, arr=self.data.to_numpy()).argsort()
+                self.matrix.append(sorted_idx)
+                nearest_neighbors = self.labels[sorted_idx].head(self.k)
+                predictions[i] = self.most_frequent(nearest_neighbors)
+        return predictions, None
 
-    def predict_forall_k(self):
-        def most_frequent(row):
-            values, counts = np.unique(row, return_counts=True)
-            return values[np.argmax(counts)]
+    def predict_for_krange(self, min_k, max_k):
         if self.matrix is None:
             raise NotFittedError(f"{type(self).__name__}.fit(X,y) must be called before this method.")
-        for k in range(1,self.matrix.shape[1]):
-            nearest_neighbors = self.matrix[:,:k]
-            yield k, np.apply_along_axis(most_frequent, axis=1, arr=self.labels[nearest_neighbors])
+        if max_k > self.matrix.shape[1]:
+            max_k = self.matrix.shape[1]
+        for k in range(min_k, max_k + 1):
+            ic(k)
+            #ic(self.matrix[:,:k])
+            #ic(self.labels)
+            nearest_neighbors = np.array([self.labels[row] for row in self.matrix[:,:k]])
+            yield k, [self.most_frequent(ns) for ns in nearest_neighbors] #np.apply_along_axis(self.most_frequent, axis=1, arr=nearest_neighbors) #apply_along_axis truncates strings!  No kwarg to prevent this!
     
 
         

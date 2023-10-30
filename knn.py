@@ -24,7 +24,7 @@ def main():
             print(f"The distance metric must be from {valid_metrics}")
             sys.exit()
         if argc == 6:
-            p = int(sys.argv[5])
+            p = float(sys.argv[5])
     except:
         print("Couldn't read one or more input parameters.")
         sys.exit()
@@ -48,6 +48,14 @@ def main():
         print(str(e))
         sys.exit()
     
+    #print the parameters:
+    print("python", end=" ")
+    for arg in sys.argv:
+        print(arg, end=" ")
+    print("\n")
+
+
+
     # Prepare the results file
     knn = KNNClassifier(1, distance, p)
     
@@ -65,6 +73,7 @@ def main():
         #print("Accuracy per crossval iteration:", accuracies)
         #print("Average accuracies:",avg_accuracies)
         print("Average accuracy:",avg_accuracies[i])
+        print()
         # print("Accuracy for each cross-validation split:")
         # for acc in accuracies:
         #     print("\t"+str(accuracies[i]))
@@ -94,6 +103,8 @@ def main():
                 print(f"{item:>{column_width}.6f}", end=' ')
             print()
 
+        print("_"*80)
+        print()
 
         #print("f-measures by class:",f_measures)
 
@@ -106,9 +117,14 @@ def main():
         # f_measures = [f_measure(p,r) for p,r in zip(precisions, recalls)]
         # print("f-measures by class:",f_measures)
 
-        # plot_confusion_matrix(matrix, class_names, precisions, recalls, f_measures)
+        #plot_confusion_matrix(matrix, class_names, precisions, recalls, f_measures)
+    plt.plot(range(min_k, max_k+1), avg_accuracies, linestyle='--', marker='o', color='r')
+    plt.xlabel("k")
+    plt.ylabel('accuracy')
+    plt.title("Accuracy over ten-fold cross validation vs. k")
+    plt.show()
 
-        print()
+        #print()
 
 if __name__ == "__main__":
     main()

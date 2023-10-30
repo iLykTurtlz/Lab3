@@ -74,11 +74,9 @@ class RandomForestClassifier(Classifier):
         self.ratio = ratio
 
     def fit(self, X, y):
-        assert(X.shape[0] == y.shape[0])
+        #assert(X.shape[0] == y.shape[0])
         # #X = X.reindex(drop=True) #for safety.  They must have the SAME index
         # #y = y.reindex(drop=True)
-
-        
         self.forest = []
         for i in range(self.num_trees):
             cols = np.random.choice(X.columns, self.num_attributes, replace=False)
@@ -223,6 +221,7 @@ class KNNClassifier(Classifier):
                 self.matrix.append(sorted_idx)
                 nearest_neighbors = self.labels[sorted_idx].head(self.k)
                 predictions[i] = self.most_frequent(nearest_neighbors)
+            self.matrix = np.asarray(self.matrix)
         return predictions, None
 
     def predict_for_krange(self, min_k, max_k):

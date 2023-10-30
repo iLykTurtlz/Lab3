@@ -9,7 +9,7 @@ def main():
     argc = len(sys.argv)
         
     if argc < 2:
-        print("python3 InduceC45 <TrainingSetFile.csv> [<restrictionsFile>]")
+        print("python InduceC45.py <TrainingSetFile.csv> [<restrictionsFile>]")
         sys.exit()
         
     training = sys.argv[1]

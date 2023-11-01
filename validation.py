@@ -90,9 +90,47 @@ def cross_validation(classifier, X, y, k, threshold, ratio=False, write_file=Non
         results_series = pd.Series(test_result)
         frame_dict = {'True value': y, 'Predicted value': results_series}
         results_df = pd.DataFrame(frame_dict)
-        results_df.to_csv(path_or_buf=write_file, index = False)
+        results_df.to_csv(path_or_buf=write_file, index=False)
+
     avg_accuracy = sum(accuracies) / k
     return matrix, accuracies, avg_accuracy
+
+
+def knn_cross_validation(knn_classifier, X, y, nb_folds, min_k, max_k):
+    """Runs cross-validation and returns accuracy and confusion matrix results for k in range [min_k, max_k]."""
+    labels = np.unique(y)
+    labels.sort()
+    encoding = {label:number for number,label in enumerate(labels)}
+    n = len(labels)
+    #matrix = np.zeros(shape=(n,n), dtype=int)
+    if nb_folds in (0,1):
+        print("Nothing to validate if you take the entire dataset")
+        return None, None, None
+    elif nb_folds > 1:
+        accuracies = np.zeros(shape=(nb_folds, max_k - min_k + 1)) #one row for each fold, one column for each value of k
+    elif nb_folds == -1:
+        accuracies = np.zeros(shape=(X.shape[0], max_k - min_k + 1))
+    else:
+        print("Invalid argument: k={k}")
+        return None, None, None
+    matrices = [np.zeros(shape=(n,n), dtype=int) for _ in range(max_k - min_k + 1)]
+    for i, ((X_train, X_test), (y_train, y_test)) in enumerate(k_folds(X,y,nb_folds)):
+        #print("len train",len(X_train), "; len test", len(X_test))
+        knn_classifier.fit(X_train, y_train)
+        _, _ = knn_classifier.predict(X_test) #this is like a train step
+        for j, (k, predictions) in enumerate(knn_classifier.predict_for_krange(min_k, max_k)):
+            
+            for y_true, y_pred in zip(y_test, predictions):
+                matrices[j][encoding[y_true], encoding[y_pred]] += 1
+                if y_true == y_pred:
+                    accuracies[i,j] += 1
+            
+            accuracies[i,j] /= len(y_test)
+
+    avg_accuracies = [sum(accuracies[:,i]) / nb_folds for i in range(accuracies.shape[1])] #array of average accuracies for k in [min_k, max_k]
+    return matrices, accuracies, avg_accuracies
+
+
 
             
 def precision_recall_by_class(matrix):

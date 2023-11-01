@@ -10,7 +10,7 @@ from validation import *
 def main():
     argc = len(sys.argv)
     if argc < 5:
-        print("Usage: python3 randomForest.py <TrainingSetFile.csv> <NumAttributes> <NumDataPoints> <NumTrees>")
+        print("Usage: python3 random_forest.py <TrainingSetFile.csv> <NumAttributes> <NumDataPoints> <NumTrees>")
         sys.exit()
 
     try:

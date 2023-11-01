@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from functools import partial
 from pandas.core.dtypes.common import is_numeric_dtype
-from icecream import ic
+
 
 
 class IncompatibleDimensionsError(Exception):

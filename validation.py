@@ -91,6 +91,7 @@ def cross_validation(classifier, X, y, k, threshold, ratio=False, write_file=Non
         frame_dict = {'True value': y, 'Predicted value': results_series}
         results_df = pd.DataFrame(frame_dict)
         results_df.to_csv(path_or_buf=write_file, index=False)
+
     avg_accuracy = sum(accuracies) / k
     return matrix, accuracies, avg_accuracy
 
@@ -203,7 +204,7 @@ def calculate_confusion_matrix(y_true, y_pred):
 
     return confusion_mat
     
-def plot_confusion_matrix(confusion_matrix, class_names, precisions, recalls, f_measures):
+def plot_confusion_matrix(confusion_matrix, class_names, precisions, recalls, f_measures, title = None):
     fig, ax = plt.subplots(2,1, figsize = (11, 6), dpi=80)
     cax = ax[0].matshow(confusion_matrix, cmap='Blues')
     
@@ -227,7 +228,7 @@ def plot_confusion_matrix(confusion_matrix, class_names, precisions, recalls, f_
     ax[0].set_ylabel('True label', color = 'blue')
     ax[0].xaxis.set_ticks_position('top')
     ax[0].xaxis.set_label_position('top')
-    ax[0].set_title("Confusion Matrix")
+    ax[0].set_title("Confusion Matrix" if not title else title)
     ax[0].set_aspect("auto")
 
 
@@ -247,7 +248,7 @@ def plot_confusion_matrix(confusion_matrix, class_names, precisions, recalls, f_
     
     #plt.figure(figsize=(10, 6), dpi=80)
     #plt.tight_layout()
-    plt.show()
+    #plt.show()
 
 
     

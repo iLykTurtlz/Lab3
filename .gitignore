@@ -48,3 +48,8 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+output/*
+restrictions.txt
+tree.json
+

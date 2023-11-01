@@ -38,7 +38,7 @@ def normalize_column(X):
     maxs = np.max(X, axis=0)
     return np.nan_to_num((X - mins) / (maxs - mins))
 
-def normalize(D: pd.core.frame.Dataframe)->pd.core.frame.DataFrame:
+def normalize(D: pd.core.frame.DataFrame)->pd.core.frame.DataFrame:
     for col in D.columns:
         if is_any_real_numeric_dtype(D[col]):
             D[col] = normalize_column(D[col])
